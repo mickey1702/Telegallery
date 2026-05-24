@@ -618,11 +618,12 @@ async function register() {
 
     if (data.success) {
       localStorage.setItem('tg_token', data.token);
-      document.getElementById('register-form').classList.add('hidden');
-      document.getElementById('login-form').classList.remove('hidden');
-      document.getElementById('auth-token').value = data.token;
-      toast('Account created! Your token is saved.');
-      login();
+      toast('Account created! Logging in...');
+      // Directly show app instead of calling login()
+      currentUser = { id: data.user_id, name: name };
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('upload-screen').classList.remove('hidden');
+      originalInit();
     } else {
       toast(data.detail || 'Registration failed');
     }
@@ -694,9 +695,6 @@ function getAuthHeaders() {
 const originalInit = init;
 init = function() {
   checkAuth();
-  if (currentUser || localStorage.getItem('tg_token')) {
-    originalInit();
-  }
 };
 
 /* ================= INIT ================= */
