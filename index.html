@@ -8,6 +8,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ─── THEME VARIABLES ───────────────────────────────────────────── */
         :root {
             --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #252525;
             --surface3: #333; --text: #fff; --text2: #aaa; --text3: #666;
@@ -15,14 +17,46 @@
             --success: #22c55e; --warning: #f59e0b; --radius: 16px;
             --radius-sm: 10px; --shadow: 0 4px 24px rgba(0,0,0,0.4);
         }
+
+        /* Light Theme */
+        [data-theme="light"] {
+            --bg: #f5f5f5; --surface: #ffffff; --surface2: #f0f0f0;
+            --surface3: #e0e0e0; --text: #1a1a1a; --text2: #666; --text3: #999;
+            --accent: #6366f1; --accent2: #8b5cf6; --shadow: 0 4px 24px rgba(0,0,0,0.1);
+        }
+
+        /* Netflix Theme */
+        [data-theme="netflix"] {
+            --bg: #141414; --surface: #1f1f1f; --surface2: #2a2a2a;
+            --surface3: #404040; --text: #fff; --text2: #b3b3b3; --text3: #666;
+            --accent: #e50914; --accent2: #b20710; --danger: #e50914;
+            --success: #46d369; --warning: #e87c03;
+            --shadow: 0 4px 24px rgba(0,0,0,0.6);
+        }
+
         body {
             font-family: 'Inter', -apple-system, sans-serif;
             background: var(--bg); color: var(--text); min-height: 100vh;
-            overflow-x: hidden;
+            overflow-x: hidden; transition: background 0.3s, color 0.3s;
         }
         .app { max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
         .hidden { display: none !important; }
 
+        /* ─── THEME SELECTOR ────────────────────────────────────────────── */
+        .theme-selector {
+            display: flex; gap: 8px; align-items: center;
+        }
+        .theme-btn {
+            width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .theme-btn:hover { transform: scale(1.1); }
+        .theme-btn.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+        .theme-dark { background: #0f0f0f; }
+        .theme-light { background: #f5f5f5; border: 1px solid #ddd; }
+        .theme-netflix { background: #141414; border: 2px solid #e50914; }
+
+        /* ─── LOADING ──────────────────────────────────────────────────── */
         .loading-screen {
             position: fixed; inset: 0; background: var(--bg); z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -32,6 +66,7 @@
         .loading-screen p { color: var(--text2); font-size: 14px; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 
+        /* ─── HEADER ─────────────────────────────────────────────────────── */
         .header {
             display: flex; align-items: center; justify-content: space-between;
             padding: 12px 0; margin-bottom: 20px;
@@ -51,13 +86,16 @@
             display: flex; align-items: center; justify-content: center; font-weight: 600;
         }
 
+        /* ─── CARDS ────────────────────────────────────────────────────── */
         .card {
             background: var(--surface); border-radius: var(--radius);
             padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow);
+            transition: background 0.3s;
         }
         .card-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
         .card-subtitle { color: var(--text2); font-size: 14px; margin-bottom: 16px; }
 
+        /* ─── BUTTONS ──────────────────────────────────────────────────── */
         .btn {
             padding: 12px 24px; border-radius: var(--radius-sm); border: none;
             font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s;
@@ -65,6 +103,7 @@
         }
         .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(99,102,241,0.3); }
+        [data-theme="netflix"] .btn-primary { background: var(--accent); }
         .btn-secondary { background: var(--surface2); color: var(--text); }
         .btn-secondary:hover { background: var(--surface3); }
         .btn-danger { background: var(--danger); color: white; }
@@ -73,6 +112,7 @@
         .btn-sm { padding: 8px 16px; font-size: 13px; }
         .btn-block { width: 100%; justify-content: center; }
 
+        /* ─── INPUTS ───────────────────────────────────────────────────── */
         .input {
             width: 100%; padding: 14px 16px; border-radius: var(--radius-sm);
             border: 1px solid var(--surface3); background: var(--surface2);
@@ -83,6 +123,7 @@
         .input-group { margin-bottom: 16px; }
         .input-label { display: block; font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 
+        /* ─── AUTH ──────────────────────────────────────────────────────── */
         .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .auth-card { width: 100%; max-width: 400px; text-align: center; }
         .auth-card .logo { font-size: 64px; margin-bottom: 16px; }
@@ -92,6 +133,7 @@
         .auth-tab { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: none; background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 14px; font-weight: 500; }
         .auth-tab.active { background: var(--accent); color: white; }
 
+        /* ─── ALBUMS GRID ─────────────────────────────────────────────── */
         .albums-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
         .album-card {
             background: var(--surface); border-radius: var(--radius); overflow: hidden;
@@ -120,6 +162,7 @@
         .album-new-btn span { font-size: 32px; margin-bottom: 8px; }
         .album-new-btn p { font-size: 14px; color: var(--text2); }
 
+        /* ─── PHOTO GRID ──────────────────────────────────────────────── */
         .photos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
         @media (min-width: 768px) { .photos-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; } }
         .photo-item {
@@ -151,6 +194,7 @@
         .photo-action-btn:hover { background: rgba(0,0,0,0.8); }
         .photo-action-btn.liked { background: var(--danger); }
 
+        /* ─── LIGHTBOX ──────────────────────────────────────────────────── */
         .lightbox {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -182,6 +226,7 @@
         .lightbox-prev { left: 16px; }
         .lightbox-next { right: 16px; }
 
+        /* ─── COMMENTS ──────────────────────────────────────────────────── */
         .comments-section {
             max-height: 200px; overflow-y: auto; margin-top: 12px;
         }
@@ -199,6 +244,7 @@
         .comment-input-row { display: flex; gap: 8px; margin-top: 12px; }
         .comment-input-row input { flex: 1; }
 
+        /* ─── MODALS ───────────────────────────────────────────────────── */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000;
             display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -216,10 +262,12 @@
         .modal-footer { padding: 0 20px 20px; display: flex; gap: 8px; }
         .modal-footer .btn { flex: 1; }
 
+        /* ─── QR CODE ──────────────────────────────────────────────────── */
         .qr-container { display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .qr-container canvas { border-radius: var(--radius-sm); margin-bottom: 12px; }
         .qr-url { font-size: 12px; color: var(--text3); word-break: break-all; text-align: center; }
 
+        /* ─── STATS ────────────────────────────────────────────────────── */
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
         .stat-card {
             background: var(--surface2); border-radius: var(--radius-sm); padding: 16px;
@@ -235,6 +283,7 @@
         .stats-album-name { font-weight: 500; }
         .stats-album-detail { font-size: 12px; color: var(--text2); }
 
+        /* ─── TIMELINE ──────────────────────────────────────────────────── */
         .timeline-date {
             font-size: 18px; font-weight: 700; margin: 24px 0 12px;
             padding-bottom: 8px; border-bottom: 1px solid var(--surface2);
@@ -242,6 +291,7 @@
         .timeline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
         @media (min-width: 768px) { .timeline-grid { grid-template-columns: repeat(6, 1fr); gap: 8px; } }
 
+        /* ─── TRASH ────────────────────────────────────────────────────── */
         .trash-empty { text-align: center; padding: 40px; color: var(--text2); }
         .trash-empty span { font-size: 48px; display: block; margin-bottom: 12px; }
         .trash-item {
@@ -253,6 +303,7 @@
         .trash-item-name { font-weight: 500; font-size: 14px; }
         .trash-item-meta { font-size: 12px; color: var(--text2); }
 
+        /* ─── PIN PAD ──────────────────────────────────────────────────── */
         .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 240px; margin: 0 auto; }
         .pin-key {
             aspect-ratio: 1; border-radius: 50%; border: none; background: var(--surface2);
@@ -270,6 +321,7 @@
         }
         .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
 
+        /* ─── NOTIFICATIONS PANEL ──────────────────────────────────────── */
         .notif-panel {
             position: fixed; top: 60px; right: 20px; width: 320px; max-height: 400px;
             background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
@@ -283,6 +335,7 @@
         .notif-item.unread { border-left: 3px solid var(--accent); }
         .notif-time { font-size: 11px; color: var(--text3); margin-top: 4px; }
 
+        /* ─── TOAST ──────────────────────────────────────────────────────── */
         .toast-container {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
             z-index: 3000; display: flex; flex-direction: column; gap: 8px;
@@ -297,6 +350,7 @@
         .toast.success { border-color: var(--success); }
         .toast.error { border-color: var(--danger); }
 
+        /* ─── UPLOADER ─────────────────────────────────────────────────── */
         .upload-zone {
             border: 2px dashed var(--surface3); border-radius: var(--radius);
             padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s;
@@ -304,17 +358,97 @@
         }
         .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(99,102,241,0.05); }
         .upload-zone span { font-size: 40px; display: block; margin-bottom: 8px; }
-        .upload-preview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
-        .upload-preview { aspect-ratio: 1; border-radius: 8px; object-fit: cover; }
 
+        /* ─── SCROLLABLE UPLOAD PREVIEW ─────────────────────────────────── */
+        .upload-preview-container {
+            max-height: 300px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin-bottom: 16px;
+            padding: 8px;
+            background: var(--surface2);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--surface3);
+        }
+        .upload-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        @media (min-width: 768px) {
+            .upload-preview-grid { grid-template-columns: repeat(6, 1fr); }
+        }
+        .upload-preview {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            object-fit: cover;
+            width: 100%;
+        }
+        .upload-preview-item {
+            position: relative;
+            aspect-ratio: 1;
+        }
+        .upload-preview-remove {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--danger);
+            color: white;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+        .upload-preview-name {
+            font-size: 10px;
+            color: var(--text2);
+            text-align: center;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .upload-count {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text2);
+            margin-bottom: 12px;
+            padding: 8px;
+            background: var(--surface3);
+            border-radius: var(--radius-sm);
+        }
+
+        /* ─── UPLOAD MODAL HEADER WITH BUTTON ───────────────────────────── */
+        .upload-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 20px 0;
+        }
+        .upload-modal-header h3 { font-size: 20px; font-weight: 600; }
+        .upload-top-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* ─── TABS ─────────────────────────────────────────────────────── */
         .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface2); padding: 4px; border-radius: var(--radius-sm); }
         .tab { flex: 1; padding: 10px; border-radius: 8px; border: none; background: transparent; color: var(--text2); cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
         .tab.active { background: var(--surface3); color: var(--text); }
 
+        /* ─── BOTTOM NAV ───────────────────────────────────────────────── */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface);
             border-top: 1px solid var(--surface2); display: flex; justify-content: space-around;
             padding: 8px 0; z-index: 100; backdrop-filter: blur(20px);
+            transition: background 0.3s;
         }
         .bottom-nav-item {
             display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -324,22 +458,114 @@
         .bottom-nav-item.active { color: var(--accent); }
         .bottom-nav-item span { font-size: 22px; }
 
+        /* ─── SCROLLBAR ────────────────────────────────────────────────── */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+        .upload-preview-container::-webkit-scrollbar { width: 4px; }
+        .upload-preview-container::-webkit-scrollbar-thumb { background: var(--accent); }
 
+        /* ─── EMPTY STATES ─────────────────────────────────────────────── */
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
         .empty-state span { font-size: 64px; display: block; margin-bottom: 16px; opacity: 0.5; }
         .empty-state h3 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
 
+        /* ─── VIDEO PLAYER ──────────────────────────────────────────────── */
         .video-player {
             width: 100%; max-height: 70vh; border-radius: 8px;
         }
 
+        /* ─── PROGRESS BAR ──────────────────────────────────────────────── */
         .progress-bar {
             width: 100%; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden;
         }
         .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.3s; }
+
+        /* ─── NETFLIX HERO BANNER ──────────────────────────────────────── */
+        .netflix-hero {
+            position: relative;
+            height: 300px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, var(--surface2), var(--surface3));
+            display: flex;
+            align-items: flex-end;
+            padding: 24px;
+        }
+        .netflix-hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, var(--bg) 0%, transparent 60%);
+        }
+        .netflix-hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        .netflix-hero h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        .netflix-hero p {
+            color: var(--text2);
+            font-size: 14px;
+        }
+
+        /* ─── NETFLIX ROW ──────────────────────────────────────────────── */
+        .netflix-row {
+            margin-bottom: 32px;
+        }
+        .netflix-row-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .netflix-row-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            scroll-snap-type: x mandatory;
+        }
+        .netflix-row-scroll::-webkit-scrollbar { height: 4px; }
+        .netflix-row-scroll::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
+        .netflix-card {
+            flex: 0 0 auto;
+            width: 160px;
+            aspect-ratio: 3/4;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            scroll-snap-align: start;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .netflix-card:hover { transform: scale(1.05); z-index: 10; }
+        .netflix-card img, .netflix-card video {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .netflix-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%);
+            display: flex;
+            align-items: flex-end;
+            padding: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .netflix-card:hover .netflix-card-overlay { opacity: 1; }
+        .netflix-card-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: white;
+        }
     </style>
 <base target="_blank">
 </head>
@@ -394,6 +620,11 @@
             <div class="header">
                 <div class="logo-text">Telegallery</div>
                 <div class="header-actions">
+                    <div class="theme-selector">
+                        <div class="theme-btn theme-dark active" onclick="setTheme('dark')" title="Dark"></div>
+                        <div class="theme-btn theme-light" onclick="setTheme('light')" title="Light"></div>
+                        <div class="theme-btn theme-netflix" onclick="setTheme('netflix')" title="Netflix"></div>
+                    </div>
                     <button class="icon-btn" onclick="toggleNotifications()" id="notif-btn">
                         <span style="font-size:16px;">🔔</span>
                         <span class="badge hidden" id="notif-badge">0</span>
@@ -457,6 +688,15 @@
                         <span style="font-size:16px;">←</span>
                     </button>
                     <h2>Settings</h2>
+                </div>
+                <div class="card">
+                    <div class="card-title">Appearance</div>
+                    <p class="card-subtitle">Choose your preferred theme</p>
+                    <div style="display:flex;gap:12px;justify-content:center;padding:12px;">
+                        <div class="theme-btn theme-dark" id="theme-dark-btn" onclick="setTheme('dark')" title="Dark" style="width:40px;height:40px;"></div>
+                        <div class="theme-btn theme-light" id="theme-light-btn" onclick="setTheme('light')" title="Light" style="width:40px;height:40px;"></div>
+                        <div class="theme-btn theme-netflix" id="theme-netflix-btn" onclick="setTheme('netflix')" title="Netflix" style="width:40px;height:40px;"></div>
+                    </div>
                 </div>
                 <div class="card">
                     <div class="card-title">Account</div>
@@ -551,12 +791,15 @@
         </div>
     </div>
 
-    <!-- Upload Modal -->
+    <!-- Upload Modal - FIXED with scrollable preview -->
     <div id="upload-modal" class="modal-overlay hidden">
-        <div class="modal">
-            <div class="modal-header">
+        <div class="modal" style="max-width:520px;">
+            <div class="upload-modal-header">
                 <h3>Upload Photos</h3>
-                <button class="modal-close" onclick="closeUploadModal()">×</button>
+                <div class="upload-top-actions">
+                    <button class="btn btn-primary btn-sm" onclick="startUpload()" id="upload-btn-top">Upload All</button>
+                    <button class="modal-close" onclick="closeUploadModal()">×</button>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
@@ -565,7 +808,14 @@
                     <p style="font-size:12px;color:var(--text3);margin-top:8px;">Photos are sent to your Telegram album</p>
                 </div>
                 <input type="file" id="file-input" multiple accept="image/*,video/*" class="hidden" onchange="handleFiles(this.files)">
-                <div class="upload-preview-grid" id="upload-preview"></div>
+
+                <div id="upload-preview-section" class="hidden">
+                    <div class="upload-count" id="upload-count">0 files selected</div>
+                    <div class="upload-preview-container" id="upload-preview-container">
+                        <div class="upload-preview-grid" id="upload-preview"></div>
+                    </div>
+                </div>
+
                 <div class="input-group">
                     <label class="input-label">Caption (optional)</label>
                     <input type="text" class="input" id="upload-caption" placeholder="Add a caption...">
@@ -576,7 +826,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="startUpload()" id="upload-btn">Upload</button>
+                <button class="btn btn-primary" onclick="startUpload()" id="upload-btn-bottom">Upload All</button>
             </div>
         </div>
     </div>
@@ -670,11 +920,15 @@
             inviteToken: null,
             notifications: [],
             pushEnabled: false,
-            view: "albums"
+            view: "albums",
+            theme: localStorage.getItem("telegallery_theme") || "dark"
         };
 
         // INIT
         document.addEventListener("DOMContentLoaded", async () => {
+            // Apply saved theme
+            setTheme(state.theme, false);
+
             const params = new URLSearchParams(window.location.search);
             const invite = params.get("invite");
             if (invite) {
@@ -706,6 +960,25 @@
 
             setTimeout(() => document.getElementById("loading").classList.add("hidden"), 800);
         });
+
+        // THEME
+        function setTheme(theme, save) {
+            save = save !== false;
+            state.theme = theme;
+            document.documentElement.setAttribute("data-theme", theme);
+
+            // Update active states
+            document.querySelectorAll(".theme-btn").forEach(btn => btn.classList.remove("active"));
+            const activeBtn = document.querySelector(".theme-btn.theme-" + theme);
+            if (activeBtn) activeBtn.classList.add("active");
+
+            // Update settings page buttons too
+            document.querySelectorAll("[id^='theme-']").forEach(btn => btn.classList.remove("active"));
+            const settingsBtn = document.getElementById("theme-" + theme + "-btn");
+            if (settingsBtn) settingsBtn.classList.add("active");
+
+            if (save) localStorage.setItem("telegallery_theme", theme);
+        }
 
         // API
         async function api(method, endpoint, body) {
@@ -856,6 +1129,10 @@
             if (state.user && state.user.role === "admin") {
                 document.getElementById("admin-settings").classList.remove("hidden");
             }
+            // Update theme buttons in settings
+            document.querySelectorAll("[id^='theme-']").forEach(btn => btn.classList.remove("active"));
+            const activeBtn = document.getElementById("theme-" + state.theme + "-btn");
+            if (activeBtn) activeBtn.classList.add("active");
         }
 
         // ALBUMS
@@ -1237,13 +1514,16 @@
             } catch (e) {}
         }
 
-        // UPLOAD
+        // UPLOAD - FIXED with scrollable preview
         function showUpload() {
             document.getElementById("upload-modal").classList.remove("hidden");
             state.pendingFiles = [];
             document.getElementById("upload-preview").innerHTML = "";
+            document.getElementById("upload-preview-section").classList.add("hidden");
             document.getElementById("upload-caption").value = "";
             document.getElementById("upload-progress").classList.add("hidden");
+            document.getElementById("upload-btn-top").classList.add("hidden");
+            document.getElementById("upload-btn-bottom").textContent = "Upload";
         }
 
         function closeUploadModal() {
@@ -1252,20 +1532,62 @@
         }
 
         function handleFiles(files) {
-            state.pendingFiles = Array.from(files);
-            const preview = document.getElementById("upload-preview");
-            preview.innerHTML = "";
+            const newFiles = Array.from(files);
+            state.pendingFiles = state.pendingFiles.concat(newFiles);
+            renderUploadPreview();
+        }
 
-            state.pendingFiles.forEach(function(file) {
+        function renderUploadPreview() {
+            const preview = document.getElementById("upload-preview");
+            const section = document.getElementById("upload-preview-section");
+            const count = document.getElementById("upload-count");
+
+            if (state.pendingFiles.length === 0) {
+                section.classList.add("hidden");
+                document.getElementById("upload-btn-top").classList.add("hidden");
+                document.getElementById("upload-btn-bottom").textContent = "Upload";
+                return;
+            }
+
+            section.classList.remove("hidden");
+            count.textContent = state.pendingFiles.length + " file" + (state.pendingFiles.length > 1 ? "s" : "") + " selected";
+            document.getElementById("upload-btn-top").classList.remove("hidden");
+            document.getElementById("upload-btn-bottom").textContent = "Upload " + state.pendingFiles.length;
+
+            preview.innerHTML = "";
+            state.pendingFiles.forEach(function(file, idx) {
+                const item = document.createElement("div");
+                item.className = "upload-preview-item";
+
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = document.createElement("img");
                     img.className = "upload-preview";
                     img.src = e.target.result;
-                    preview.appendChild(img);
+                    item.appendChild(img);
+
+                    const removeBtn = document.createElement("button");
+                    removeBtn.className = "upload-preview-remove";
+                    removeBtn.innerHTML = "×";
+                    removeBtn.onclick = function(ev) {
+                        ev.stopPropagation();
+                        removeFile(idx);
+                    };
+                    item.appendChild(removeBtn);
                 };
                 reader.readAsDataURL(file);
+
+                preview.appendChild(item);
             });
+
+            // Auto-scroll to bottom to show newest
+            const container = document.getElementById("upload-preview-container");
+            setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
+        }
+
+        function removeFile(idx) {
+            state.pendingFiles.splice(idx, 1);
+            renderUploadPreview();
         }
 
         async function startUpload() {
@@ -1284,7 +1606,7 @@
 
             toast(state.pendingFiles.length + " photos uploaded!");
             closeUploadModal();
-            await loadAlbumPhotos(state.currentAlbum);
+            if (state.currentAlbum) await loadAlbumPhotos(state.currentAlbum);
         }
 
         // CREATE ALBUM
