@@ -1,45 +1,10 @@
-<!DOC
-<!-- PIN SCREEN -->
-<div id="pin-screen" class="screen hidden">
-  <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center;">
-    <div style="font-size:2.5rem; margin-bottom:15px;">🔐</div>
-    <h1 style="font-size:1.3rem; margin-bottom:8px;">Enter PIN</h1>
-    <p style="color:var(--text-muted); margin-bottom:25px;">Secure your album</p>
-    <div style="display:flex; gap:10px; margin-bottom:20px;" id="pin-dots">
-      <div style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border);" id="pin-1"></div>
-      <div style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border);" id="pin-2"></div>
-      <div style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border);" id="pin-3"></div>
-      <div style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border);" id="pin-4"></div>
-    </div>
-    <div style="display:grid; grid-template-columns: repeat(3, 70px); gap:12px;">
-      <button class="pin-btn" onclick="enterPin(1)">1</button>
-      <button class="pin-btn" onclick="enterPin(2)">2</button>
-      <button class="pin-btn" onclick="enterPin(3)">3</button>
-      <button class="pin-btn" onclick="enterPin(4)">4</button>
-      <button class="pin-btn" onclick="enterPin(5)">5</button>
-      <button class="pin-btn" onclick="enterPin(6)">6</button>
-      <button class="pin-btn" onclick="enterPin(7)">7</button>
-      <button class="pin-btn" onclick="enterPin(8)">8</button>
-      <button class="pin-btn" onclick="enterPin(9)">9</button>
-      <button class="pin-btn" style="visibility:hidden;">.</button>
-      <button class="pin-btn" onclick="enterPin(0)">0</button>
-      <button class="pin-btn" onclick="backspacePin()">⌫</button>
-    </div>
-    <button class="sheet-close" style="margin-top:20px;" onclick="forgotPin()">Forgot PIN</button>
-  </div>
-  <style>
-    .pin-btn { width:70px; height:70px; border-radius:50%; border:none; background:var(--surface); color:var(--text); font-size:1.3rem; font-weight:600; cursor:pointer; box-shadow:var(--shadow); }
-    .pin-btn:active { transform:scale(0.95); background:var(--accent-light); }
-    .pin-filled { background:var(--accent) !important; border-color:var(--accent) !important; }
-  </style>
-</div>
-TYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#ffffff">
-<title>TeleGallery Pro</title>
+<title>TeleGallery</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root {
@@ -68,499 +33,1177 @@ body {
 .hidden { display: none !important; }
 @keyframes fadeIn { from {opacity:0; transform:translateY(10px)} to {opacity:1; transform:translateY(0)} }
 
-/* Auth */
-.auth-screen { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; }
-.auth-logo { font-size:3.5rem; margin-bottom:16px; }
-.auth-title { font-size:1.6rem; font-weight:800; margin-bottom:8px; }
-.auth-sub { color:var(--text-muted); margin-bottom:32px; max-width:300px; line-height:1.5; }
-.auth-form { width:100%; max-width:340px; }
-.auth-input { width:100%; padding:13px 16px; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-size:0.95rem; outline:none; margin-bottom:12px; }
-.auth-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
-.auth-btn { width:100%; padding:14px; border-radius:var(--radius-sm); border:none; background:var(--accent); color:white; font-size:1rem; font-weight:700; cursor:pointer; margin-bottom:12px; }
-.auth-link { color:var(--accent); font-weight:600; text-decoration:none; cursor:pointer; }
-.auth-toggle { margin-top:16px; color:var(--text-muted); font-size:0.9rem; }
+.profile-bar {
+  display: flex; align-items: center;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.profile-bar::-webkit-scrollbar { display: none; }
+.profile-chip {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  border-radius: 24px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.profile-chip:hover { border-color: var(--accent); }
+.profile-chip.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  box-shadow: 0 2px 8px var(--accent-glow);
+}
+.profile-chip .p-icon { font-size: 1.3rem; }
+.profile-chip .p-badge {
+  font-size: 0.65rem; padding: 2px 8px; border-radius: 10px;
+  background: var(--bg); color: var(--text-muted); font-weight: 700;
+}
+.profile-chip.active .p-badge { background: var(--accent); color: white; }
+.profile-chip .p-lock { font-size: 0.8rem; opacity: 0.5; }
+.add-profile {
+  flex-shrink: 0;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 2px dashed var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.3rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.add-profile:hover { border-color: var(--accent); color: var(--accent); }
 
-/* PIN */
-.pin-screen { position:fixed; inset:0; background:var(--bg); z-index:500; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-.pin-dots { display:flex; gap:16px; margin:24px 0; }
-.pin-dot { width:16px; height:16px; border-radius:50%; border:2px solid var(--border); background:transparent; transition:all 0.2s; }
-.pin-dot.filled { background:var(--accent); border-color:var(--accent); }
-.pin-pad { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; width:280px; }
-.pin-key { aspect-ratio:1; border-radius:50%; border:none; background:var(--surface); color:var(--text); font-size:1.4rem; font-weight:600; cursor:pointer; box-shadow:var(--shadow); display:flex; align-items:center; justify-content:center; }
-.pin-key:active { transform:scale(0.95); background:var(--accent-light); }
+.top-header {
+  display: flex; align-items: center;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+  flex-shrink: 0;
+}
+.top-header h1 { flex:1; font-size: 1.25rem; font-weight: 800; }
+.header-btn {
+  width: 38px; height: 38px; border-radius: var(--radius-sm);
+  border: none; background: var(--accent-light); color: var(--accent);
+  font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
 
-/* Profile Bar */
-.profile-bar { display:flex; align-items:center; padding:10px 14px; background:var(--surface); border-bottom:1px solid var(--border); gap:10px; flex-shrink:0; overflow-x:auto; scrollbar-width:none; }
-.profile-bar::-webkit-scrollbar { display:none; }
-.profile-chip { flex-shrink:0; display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:24px; border:2px solid var(--border); background:var(--surface); cursor:pointer; transition:all 0.2s; font-size:0.9rem; font-weight:600; }
-.profile-chip.active { border-color:var(--accent); background:var(--accent-light); }
-.profile-chip .p-badge { font-size:0.65rem; padding:2px 8px; border-radius:10px; background:var(--bg); color:var(--text-muted); font-weight:700; }
-.profile-chip.active .p-badge { background:var(--accent); color:white; }
-.add-profile { flex-shrink:0; width:40px; height:40px; border-radius:50%; border:2px dashed var(--border); background:transparent; color:var(--text-muted); font-size:1.3rem; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.search-bar {
+  padding: 10px 16px; background: var(--surface);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.search-bar input {
+  width: 100%; padding: 11px 16px 11px 40px;
+  border: 1.5px solid var(--border); border-radius: 24px;
+  background: var(--bg); color: var(--text); font-size: 0.95rem; outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%238899a6' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 14px center;
+}
+.search-bar input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 
-/* Headers */
-.top-header { display:flex; align-items:center; padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--border); gap:10px; flex-shrink:0; }
-.top-header h1 { flex:1; font-size:1.25rem; font-weight:800; }
-.header-btn { width:38px; height:38px; border-radius:var(--radius-sm); border:none; background:var(--accent-light); color:var(--accent); font-size:1.1rem; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.tags-scroll {
+  display: flex; gap: 10px; padding: 12px 16px;
+  overflow-x: auto; flex-shrink: 0; scrollbar-width: none;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.tags-scroll::-webkit-scrollbar { display: none; }
+.tag-pill {
+  flex-shrink: 0; padding: 7px 14px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  color: var(--text-muted); font-size: 0.88rem; font-weight: 500;
+  cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+}
+.tag-pill.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 2px 8px var(--accent-glow); }
+.tag-pill:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+.tag-pill .count { font-size: 0.72rem; opacity: 0.7; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 10px; }
+.tag-pill.active .count { background: rgba(255,255,255,0.25); }
 
-/* Search */
-.search-bar { padding:10px 16px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
-.search-bar input { width:100%; padding:11px 16px 11px 40px; border:1.5px solid var(--border); border-radius:24px; background:var(--bg); color:var(--text); font-size:0.95rem; outline:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%238899a6' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:14px center; }
+.drop-zone {
+  margin: 16px; padding: 36px 20px;
+  border: 2.5px dashed var(--border); border-radius: var(--radius);
+  background: var(--surface); text-align: center; cursor: pointer;
+  transition: all 0.3s; position: relative;
+}
+.drop-zone.dragover { border-color: var(--accent); background: var(--accent-light); transform: scale(1.01); }
+.drop-zone .dz-icon { font-size: 2.8rem; margin-bottom: 10px; }
+.drop-zone .dz-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+.drop-zone .dz-sub { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; }
+.drop-zone .dz-formats { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.drop-zone .dz-format { font-size: 0.72rem; padding: 3px 8px; background: var(--bg); border-radius: 6px; color: var(--text-muted); font-weight: 500; }
+.drop-zone input { display: none; }
 
-/* Tags */
-.tags-scroll { display:flex; gap:10px; padding:12px 16px; overflow-x:auto; flex-shrink:0; scrollbar-width:none; background:var(--surface); border-bottom:1px solid var(--border); }
-.tags-scroll::-webkit-scrollbar { display:none; }
-.tag-pill { flex-shrink:0; padding:7px 14px; border-radius:20px; border:1.5px solid var(--border); background:var(--surface); color:var(--text-muted); font-size:0.88rem; font-weight:500; cursor:pointer; transition:all 0.2s; }
-.tag-pill.active { background:var(--accent); color:white; border-color:var(--accent); }
+.preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; padding: 0 16px 14px; max-height: 200px; overflow-y: auto; }
+.preview-item { aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden; position: relative; border: 2px solid var(--border); }
+.preview-item img { width: 100%; height: 100%; object-fit: cover; }
+.preview-item .remove { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; background: var(--danger); color: white; border-radius: 50%; border: none; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-/* Drop Zone */
-.drop-zone { margin:16px; padding:36px 20px; border:2.5px dashed var(--border); border-radius:var(--radius); background:var(--surface); text-align:center; cursor:pointer; transition:all 0.3s; }
-.drop-zone.dragover { border-color:var(--accent); background:var(--accent-light); transform:scale(1.01); }
-.drop-zone .dz-icon { font-size:2.8rem; margin-bottom:10px; }
-.drop-zone input { display:none; }
+.meta-section { padding: 0 16px 12px; }
+.meta-section label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 5px; }
+.meta-section textarea, .meta-section input[type="text"] { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-size: 0.93rem; outline: none; font-family: inherit; }
+.meta-section textarea { resize: vertical; min-height: 70px; }
+.meta-section input[type="text"]:focus, .meta-section textarea:focus { border-color: var(--accent); }
 
-/* Gallery */
-.gallery-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:12px; padding:16px; overflow-y:auto; flex:1; }
-.photo-card { aspect-ratio:1; background:var(--surface); border-radius:var(--radius-sm); overflow:hidden; cursor:pointer; position:relative; transition:all 0.25s; border:2px solid transparent; box-shadow:var(--shadow); }
-.photo-card:hover { transform:translateY(-3px) scale(1.02); border-color:var(--accent); }
-.photo-card .video-badge { position:absolute; top:8px; right:8px; width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.5); color:white; display:flex; align-items:center; justify-content:center; font-size:0.9rem; }
-.photo-card .info-bar { position:absolute; bottom:0; left:0; right:0; padding:22px 8px 8px; background:linear-gradient(transparent, rgba(0,0,0,0.6)); color:white; font-size:0.78rem; }
+.progress-wrap { padding: 0 16px 12px; }
+.progress-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.4s ease; border-radius: 3px; }
+.progress-text { text-align: center; font-size: 0.82rem; color: var(--text-muted); margin-top: 7px; }
 
-/* Empty State */
-.empty-state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; color:var(--text-muted); }
+.upload-action { padding: 0 16px 14px; }
+.upload-action button { width: 100%; padding: 14px; border-radius: var(--radius-sm); border: none; background: var(--accent); color: white; font-size: 0.98rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px var(--accent-glow); }
+.upload-action button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Viewer */
-.viewer { position:fixed; inset:0; background:rgba(0,0,0,0.94); z-index:200; display:flex; flex-direction:column; }
-.viewer-toolbar { display:flex; align-items:center; padding:10px 14px; gap:10px; }
-.viewer-toolbar button { width:38px; height:38px; border-radius:50%; border:none; background:rgba(255,255,255,0.1); color:white; font-size:1.1rem; cursor:pointer; }
-.viewer-img-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:8px; }
-.viewer-img-wrap img, .viewer-img-wrap video { max-width:100%; max-height:100%; object-fit:contain; border-radius:4px; }
-.viewer-caption { padding:12px 18px 6px; color:rgba(255,255,255,0.85); text-align:center; }
-.viewer-actions { display:flex; gap:20px; justify-content:center; padding-bottom:18px; }
-.viewer-actions button { background:none; border:none; color:rgba(255,255,255,0.6); font-size:1.3rem; cursor:pointer; }
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; padding: 16px; overflow-y: auto; flex: 1; }
+@media(min-width:768px){ .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; } }
 
-/* Comments */
-.comments-panel { position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-radius:var(--radius) var(--radius) 0 0; padding:20px; max-height:60vh; overflow-y:auto; z-index:250; }
-.comment-item { padding:10px 0; border-bottom:1px solid var(--border); }
-.comment-author { font-weight:700; font-size:0.9rem; }
-.comment-text { color:var(--text-muted); font-size:0.85rem; margin-top:2px; }
-.comment-input { display:flex; gap:8px; padding-top:12px; }
-.comment-input input { flex:1; padding:10px 14px; border:1.5px solid var(--border); border-radius:20px; background:var(--bg); color:var(--text); outline:none; }
-.comment-input button { padding:10px 18px; border:none; border-radius:20px; background:var(--accent); color:white; font-weight:600; cursor:pointer; }
+.photo-card { aspect-ratio: 1; background: var(--surface); border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; position: relative; transition: all 0.25s cubic-bezier(0.4,0,0.2,1); border: 2px solid transparent; box-shadow: var(--shadow); }
+.photo-card:hover { transform: translateY(-3px) scale(1.02); border-color: var(--accent); box-shadow: var(--shadow-lg); }
+.photo-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.photo-card:hover img { transform: scale(1.08); }
 
-/* Timeline */
-.timeline-view { padding:16px; overflow-y:auto; flex:1; }
-.timeline-month { margin-bottom:20px; }
-.timeline-month h3 { font-size:1rem; color:var(--text-muted); margin-bottom:10px; padding-left:4px; }
-.timeline-photos { display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:8px; }
+.photo-card .star { position: absolute; top: 7px; right: 7px; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.35); backdrop-filter: blur(4px); border: none; color: white; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+.photo-card:hover .star { opacity: 1; }
+.photo-card .star.faved { opacity: 1; color: var(--warning); background: rgba(0,0,0,0.55); }
 
-/* Stats */
-.stats-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; padding:16px; }
-.stat-card { background:var(--surface); border-radius:var(--radius-sm); padding:16px; text-align:center; box-shadow:var(--shadow); }
-.stat-value { font-size:1.8rem; font-weight:800; color:var(--accent); }
-.stat-label { font-size:0.8rem; color:var(--text-muted); margin-top:4px; }
+.photo-card .select-ring { position: absolute; top: 7px; left: 7px; width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.8); background: rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: white; opacity: 0; transition: opacity 0.2s; }
+.photo-card:hover .select-ring { opacity: 1; }
+.photo-card.selected .select-ring { opacity: 1; background: var(--accent); border-color: var(--accent); }
+.photo-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 
-/* Trash */
-.trash-item { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); }
-.trash-info { flex:1; }
-.trash-name { font-weight:600; font-size:0.9rem; }
-.trash-date { font-size:0.75rem; color:var(--text-muted); }
+.photo-card .info-bar { position: absolute; bottom: 0; left: 0; right: 0; padding: 22px 8px 8px; background: linear-gradient(transparent, rgba(0,0,0,0.6)); color: white; font-size: 0.78rem; display: flex; justify-content: space-between; align-items: center; }
+.photo-card .share-badge { position: absolute; top: 7px; left: 50%; transform: translateX(-50%); padding: 3px 10px; background: var(--success); color: white; font-size: 0.65rem; font-weight: 700; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-/* QR */
-.qr-display { background:white; padding:20px; border-radius:var(--radius-sm); text-align:center; margin:16px 0; }
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; color: var(--text-muted); }
+.empty-state .es-icon { font-size: 3.5rem; margin-bottom: 14px; opacity: 0.4; }
+.empty-state .es-title { font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.empty-state .es-sub { font-size: 0.9rem; max-width: 260px; line-height: 1.5; }
 
-/* Modals */
-.modal { position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); display:flex; align-items:flex-end; justify-content:center; z-index:100; }
-.modal-sheet { background:var(--surface); border-radius:var(--radius) var(--radius) 0 0; padding:22px; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; animation:sheetUp 0.35s; }
-@keyframes sheetUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
-.sheet-option { display:flex; align-items:center; gap:14px; padding:14px; border-radius:var(--radius-sm); cursor:pointer; }
-.sheet-option:hover { background:var(--surface-hover); }
-.sheet-close { width:100%; padding:12px; margin-top:10px; border-radius:var(--radius-sm); border:none; background:var(--surface-hover); color:var(--text); font-size:0.95rem; font-weight:600; cursor:pointer; }
+.viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.94); z-index: 200; display: flex; flex-direction: column; animation: fadeIn 0.2s; touch-action: pan-y; }
+.viewer-toolbar { display: flex; align-items: center; padding: 10px 14px; gap: 10px; }
+.viewer-toolbar button { width: 38px; height: 38px; border-radius: 50%; border: none; background: rgba(255,255,255,0.1); color: white; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.viewer-toolbar .v-title { flex: 1; color: white; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+.viewer-img-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 8px; position: relative; }
+.viewer-img-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px; max-height: 72vh; }
+.viewer-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(255,255,255,0.12); color: white; font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+.viewer-nav.prev { left: 8px; } .viewer-nav.next { right: 8px; }
+.viewer-caption { padding: 12px 18px 6px; color: rgba(255,255,255,0.85); text-align: center; font-size: 0.95rem; }
+.viewer-details { display: flex; gap: 18px; justify-content: center; padding-bottom: 18px; color: rgba(255,255,255,0.45); font-size: 0.78rem; }
 
-/* Toast */
-.toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:11px 22px; border-radius:24px; z-index:300; font-size:0.88rem; font-weight:600; }
+.bottom-nav { display: flex; background: var(--surface); border-top: 1px solid var(--border); padding: 6px 0 calc(6px + env(safe-area-inset-bottom)); flex-shrink: 0; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px; border: none; background: none; color: var(--text-muted); font-size: 0.72rem; font-weight: 600; cursor: pointer; }
+.nav-item .nav-icon { font-size: 1.4rem; }
+.nav-item.active { color: var(--accent); }
 
-/* Bottom Nav */
-.bottom-nav { display:flex; background:var(--surface); border-top:1px solid var(--border); padding:6px 0 calc(6px + env(safe-area-inset-bottom)); flex-shrink:0; }
-.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:5px; border:none; background:none; color:var(--text-muted); font-size:0.72rem; font-weight:600; cursor:pointer; }
-.nav-item .nav-icon { font-size:1.4rem; }
-.nav-item.active { color:var(--accent); }
+.bulk-bar { position: fixed; bottom: 66px; left: 14px; right: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-lg); z-index: 50; animation: slideUp 0.3s ease; }
+.bulk-bar .bulk-count { flex: 1; font-weight: 700; font-size: 0.95rem; }
+.bulk-bar button { width: auto; padding: 8px 14px; border-radius: var(--radius-sm); font-size: 0.85rem; border: none; cursor: pointer; }
+.bulk-bar .secondary { background: var(--surface-hover); color: var(--text); }
+.bulk-bar .bulk-danger { background: var(--danger); color: white; }
+.bulk-bar .bulk-share { background: var(--success); color: white; }
+.bulk-bar .bulk-move { background: var(--accent); color: white; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); display: flex; align-items: flex-end; justify-content: center; z-index: 100; }
+.modal-sheet { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; padding: 22px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; animation: sheetUp 0.35s cubic-bezier(0.4,0,0.2,1); }
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-sheet h3 { font-size: 1.2rem; margin-bottom: 6px; }
+.modal-sheet .sheet-sub { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px; }
+.sheet-option { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.2s; }
+.sheet-option:hover { background: var(--surface-hover); }
+.sheet-option .so-icon { font-size: 1.6rem; width: 40px; text-align: center; }
+.sheet-option .so-text { flex: 1; }
+.sheet-option .so-title { font-weight: 700; font-size: 0.98rem; }
+.sheet-option .so-desc { color: var(--text-muted); font-size: 0.82rem; margin-top: 2px; }
+.sheet-divider { height: 1px; background: var(--border); margin: 8px 0; }
+.sheet-close { width: 100%; padding: 12px; margin-top: 10px; border-radius: var(--radius-sm); border: none; background: var(--surface-hover); color: var(--text); font-size: 0.95rem; font-weight: 600; cursor: pointer; }
 
-/* Progress */
-.progress-wrap { padding:0 16px 12px; }
-.progress-bar { height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
-.progress-fill { height:100%; background:var(--accent); width:0%; transition:width 0.4s; }
+.toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 11px 22px; border-radius: 24px; z-index: 300; font-size: 0.88rem; font-weight: 600; box-shadow: var(--shadow-lg); animation: toastIn 0.3s ease; white-space: nowrap; }
+@keyframes toastIn { from { transform: translateX(-50%) translateY(20px); opacity:0 } to { transform: translateX(-50%) translateY(0); opacity:1 } }
 
-/* Preview Grid */
-.preview-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(90px, 1fr)); gap:8px; padding:0 16px 14px; max-height:200px; overflow-y:auto; }
-.preview-item { aspect-ratio:1; border-radius:var(--radius-sm); overflow:hidden; position:relative; border:2px solid var(--border); }
-.preview-item img { width:100%; height:100%; object-fit:cover; }
-.preview-item .remove { position:absolute; top:3px; right:3px; width:22px; height:22px; background:var(--danger); color:white; border-radius:50%; border:none; font-size:0.75rem; cursor:pointer; }
+.member-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+.member-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; }
+.member-name { flex: 1; font-size: 0.95rem; }
+.member-role { font-size: 0.78rem; color: var(--text-muted); background: var(--bg); padding: 3px 10px; border-radius: 10px; }
 
-/* Meta */
-.meta-section { padding:0 16px 12px; }
-.meta-section label { display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin-bottom:5px; }
-.meta-section textarea, .meta-section input[type="text"] { width:100%; padding:11px 13px; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-size:0.93rem; outline:none; font-family:inherit; }
-.meta-section textarea { resize:vertical; min-height:70px; }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+.toggle-row .t-label { font-size: 0.95rem; }
+.toggle-row .t-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+.toggle-switch { width: 48px; height: 28px; border-radius: 14px; background: var(--border); position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+.toggle-switch.on { background: var(--accent); }
+.toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: white; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-switch.on::after { transform: translateX(20px); }
 
-::-webkit-scrollbar { width:5px; }
-::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 </style>
 <base target="_blank">
 </head>
 <body>
-
-<!-- AUTH SCREEN -->
-<div id="auth-screen" class="screen">
-  <div class="auth-screen">
-    <div class="auth-logo">📸</div>
-    <div class="auth-title">TeleGallery Pro</div>
-    <div class="auth-sub">Your personal cloud gallery powered by Telegram</div>
-
-    <div id="login-form" class="auth-form">
-      <input type="password" id="auth-token" class="auth-input" placeholder="Enter your access token...">
-      <button type="button" class="auth-btn" onclick="login()">🔐 Login</button>
-      <div class="auth-toggle">New here? <span class="auth-link" onclick="showRegister()">Create your own cloud</span></div>
-    </div>
-
-    <div id="register-form" class="auth-form hidden">
-      <input type="text" id="reg-name" class="auth-input" placeholder="Your Name">
-      <input type="text" id="reg-api-id" class="auth-input" placeholder="Telegram API ID (from my.telegram.org)">
-      <input type="text" id="reg-api-hash" class="auth-input" placeholder="Telegram API Hash">
-      <input type="text" id="reg-bot-token" class="auth-input" placeholder="Bot Token (from @BotFather)">
-      <input type="text" id="reg-group-id" class="auth-input" placeholder="Group ID (e.g. -100123456789)">
-      <button type="button" class="auth-btn" onclick="register()">🚀 Create My Cloud</button>
-      <div class="auth-toggle"><span class="auth-link" onclick="showLogin()">← Back to Login</span></div>
-    </div>
+  <!-- UPLOAD SCREEN -->
+<div id="upload-screen" class="screen">
+  <div class="profile-bar" id="profile-bar"></div>
+  <div class="top-header">
+    <h1 id="upload-header-title">📤 Upload</h1>
+    <button class="header-btn" onclick="toggleTheme()">🌓</button>
+    <button class="header-btn" onclick="showProfileSettings()">⚙️</button>
+  </div>
+  <div class="tags-scroll" id="upload-tags"></div>
+  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+    <div class="dz-icon">🖼️</div>
+    <div class="dz-title">Drop photos here</div>
+    <div class="dz-sub">or tap to browse</div>
+    <div class="dz-formats"><span class="dz-format">JPG</span><span class="dz-format">PNG</span><span class="dz-format">HEIC</span><span class="dz-format">MP4</span></div>
+    <input type="file" id="file-input" accept="image/*,video/*" multiple onchange="handleFiles(this.files)">
+  </div>
+  <div class="preview-grid hidden" id="preview-grid"></div>
+  <div class="meta-section">
+    <label>Caption</label>
+    <textarea id="caption-input" placeholder="Add a note..."></textarea>
+  </div>
+  <div class="progress-wrap hidden" id="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="progress-text" id="progress-text">Uploading...</div>
+  </div>
+  <div class="upload-action">
+    <button id="upload-btn" onclick="uploadToBackend()"><span>📤</span> Upload to Telegram</button>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('upload')"><span class="nav-icon">📤</span><span>Upload</span></button>
+    <button class="nav-item" onclick="switchTab('gallery')"><span class="nav-icon">🖼️</span><span>Gallery</span></button>
   </div>
 </div>
 
 <!-- PIN SCREEN -->
-<div id="pin-screen" class="pin-screen hidden">
-  <div class="auth-logo">🔒</div>
-  <div class="auth-title">Enter PIN</div>
-  <div class="pin-dots" id="pin-dots">
-    <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+<div id="pin-screen" class="screen hidden">
+  <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center;">
+    <div style="font-size:2.5rem; margin-bottom:15px;">🔐</div>
+    <h1 style="font-size:1.3rem; margin-bottom:8px;">Enter PIN</h1>
+    <p style="color:var(--text-muted); margin-bottom:25px;">Secure your album</p>
+    <div style="display:flex; gap:10px; margin-bottom:20px;" id="pin-dots">
+      <div style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border); transition:all 0.2s;" id="pin-1"></div>
+      <div style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border); transition:all 0.2s;" id="pin-2"></div>
+      <div style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border); transition:all 0.2s;" id="pin-3"></div>
+      <div style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border); transition:all 0.2s;" id="pin-4"></div>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(3, 70px); gap:12px;">
+      <button type="button" class="pin-btn" onclick="enterPin(1)">1</button>
+      <button type="button" class="pin-btn" onclick="enterPin(2)">2</button>
+      <button type="button" class="pin-btn" onclick="enterPin(3)">3</button>
+      <button type="button" class="pin-btn" onclick="enterPin(4)">4</button>
+      <button type="button" class="pin-btn" onclick="enterPin(5)">5</button>
+      <button type="button" class="pin-btn" onclick="enterPin(6)">6</button>
+      <button type="button" class="pin-btn" onclick="enterPin(7)">7</button>
+      <button type="button" class="pin-btn" onclick="enterPin(8)">8</button>
+      <button type="button" class="pin-btn" onclick="enterPin(9)">9</button>
+      <button type="button" class="pin-btn" style="visibility:hidden;">.</button>
+      <button type="button" class="pin-btn" onclick="enterPin(0)">0</button>
+      <button type="button" class="pin-btn" onclick="backspacePin()">⌫</button>
+    </div>
+    <button type="button" class="sheet-close" style="margin-top:20px; background:var(--surface-hover);" onclick="forgotPin()">Forgot PIN</button>
   </div>
-  <div class="pin-pad">
-    <button class="pin-key" onclick="enterPin(1)">1</button>
-    <button class="pin-key" onclick="enterPin(2)">2</button>
-    <button class="pin-key" onclick="enterPin(3)">3</button>
-    <button class="pin-key" onclick="enterPin(4)">4</button>
-    <button class="pin-key" onclick="enterPin(5)">5</button>
-    <button class="pin-key" onclick="enterPin(6)">6</button>
-    <button class="pin-key" onclick="enterPin(7)">7</button>
-    <button class="pin-key" onclick="enterPin(8)">8</button>
-    <button class="pin-key" onclick="enterPin(9)">9</button>
-    <button class="pin-key" onclick="backspacePin()">⌫</button>
-    <button class="pin-key" onclick="enterPin(0)">0</button>
-    <button class="pin-key" onclick="cancelPin()">✕</button>
-  </div>
+  <style>
+    .pin-btn { width:70px; height:70px; border-radius:50%; border:none; background:var(--surface); color:var(--text); font-size:1.3rem; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:all 0.15s; }
+    .pin-btn:active { transform:scale(0.92); background:var(--accent-light); }
+  </style>
 </div>
 
-<!-- SET PIN SCREEN -->
-<div id="set-pin-screen" class="pin-screen hidden">
-  <div class="auth-logo">🔐</div>
-  <div class="auth-title">Set Album PIN</div>
-  <div class="auth-sub">Protect your albums with a 4-digit PIN</div>
-  <div class="pin-dots" id="set-pin-dots">
-    <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
-  </div>
-  <div class="pin-pad">
-    <button class="pin-key" onclick="enterSetPin(1)">1</button>
-    <button class="pin-key" onclick="enterSetPin(2)">2</button>
-    <button class="pin-key" onclick="enterSetPin(3)">3</button>
-    <button class="pin-key" onclick="enterSetPin(4)">4</button>
-    <button class="pin-key" onclick="enterSetPin(5)">5</button>
-    <button class="pin-key" onclick="enterSetPin(6)">6</button>
-    <button class="pin-key" onclick="enterSetPin(7)">7</button>
-    <button class="pin-key" onclick="enterSetPin(8)">8</button>
-    <button class="pin-key" onclick="enterSetPin(9)">9</button>
-    <button class="pin-key" onclick="backspaceSetPin()">⌫</button>
-    <button class="pin-key" onclick="enterSetPin(0)">0</button>
-    <button class="pin-key" onclick="cancelSetPin()">✕</button>
-  </div>
-</div>
-
-<!-- MAIN APP -->
-<div id="app-screen" class="screen hidden">
-  <div class="profile-bar" id="profile-bar"></div>
-
+<!-- GALLERY SCREEN -->
+<div id="gallery-screen" class="screen hidden">
+  <div class="profile-bar" id="gallery-profile-bar"></div>
   <div class="top-header">
-    <h1 id="header-title">📤 Upload</h1>
+    <h1 id="gallery-header-title">🖼️ Gallery</h1>
+    <button class="header-btn" onclick="toggleSelectMode()">☑️</button>
     <button class="header-btn" onclick="toggleTheme()">🌓</button>
-    <button class="header-btn" onclick="showStats()">📊</button>
-    <button class="header-btn" onclick="showSettings()">⚙️</button>
   </div>
-
-  <div class="tags-scroll" id="tags-scroll"></div>
-
-  <!-- Upload View -->
-  <div id="upload-view">
-    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-      <div class="dz-icon">🖼️</div>
-      <div style="font-weight:600; margin-bottom:4px;">Drop photos here</div>
-      <div style="color:var(--text-muted); font-size:0.88rem; margin-bottom:12px;">or tap to browse</div>
-      <div style="display:flex; gap:6px; justify-content:center;">
-        <span style="font-size:0.72rem; padding:3px 8px; background:var(--bg); border-radius:6px; color:var(--text-muted);">JPG</span>
-        <span style="font-size:0.72rem; padding:3px 8px; background:var(--bg); border-radius:6px; color:var(--text-muted);">PNG</span>
-        <span style="font-size:0.72rem; padding:3px 8px; background:var(--bg); border-radius:6px; color:var(--text-muted);">MP4</span>
-      </div>
-      <input type="file" id="file-input" accept="image/*,video/*" multiple onchange="handleFiles(this.files)">
-    </div>
-    <div class="preview-grid hidden" id="preview-grid"></div>
-    <div class="meta-section">
-      <label>Caption</label>
-      <textarea id="caption-input" placeholder="Add a note..."></textarea>
-    </div>
-    <div class="progress-wrap hidden" id="progress-wrap">
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-      <div style="text-align:center; font-size:0.82rem; color:var(--text-muted); margin-top:7px;" id="progress-text">Uploading...</div>
-    </div>
-    <div style="padding:0 16px 14px;">
-      <button id="upload-btn" style="width:100%; padding:14px; border-radius:var(--radius-sm); border:none; background:var(--accent); color:white; font-size:0.98rem; font-weight:700; cursor:pointer;" onclick="uploadToBackend()">📤 Upload to Telegram</button>
-    </div>
+  <div class="search-bar">
+    <input type="text" id="gallery-search" placeholder="Search photos & albums..." oninput="doSearch()">
   </div>
-
-  <!-- Gallery View -->
-  <div id="gallery-view" class="hidden">
-    <div class="search-bar">
-      <input type="text" id="gallery-search" placeholder="Search photos & albums..." oninput="renderGallery()">
-    </div>
-    <div class="gallery-grid" id="gallery-grid"></div>
-    <div class="empty-state hidden" id="empty-state">
-      <div style="font-size:3.5rem; margin-bottom:14px; opacity:0.4;">🖼️</div>
-      <div style="font-size:1.15rem; font-weight:700;">No photos yet</div>
-      <div style="font-size:0.9rem; color:var(--text-muted); max-width:260px;">Switch to Upload to add your first photos.</div>
-    </div>
+  <div class="tags-scroll" id="gallery-tags"></div>
+  <div class="gallery-grid" id="gallery-grid"></div>
+  <div class="empty-state hidden" id="empty-state">
+    <div class="es-icon">🖼️</div>
+    <div class="es-title">No photos yet</div>
+    <div class="es-sub">Switch to Upload to add your first photos to this album.</div>
   </div>
-
-  <!-- Timeline View -->
-  <div id="timeline-view" class="timeline-view hidden"></div>
-
-  <!-- Trash View -->
-  <div id="trash-view" class="hidden" style="flex:1; overflow-y:auto;">
-    <div style="padding:16px;">
-      <h2 style="margin-bottom:12px;">🗑️ Trash</h2>
-      <div id="trash-list"></div>
-    </div>
-  </div>
-
-  <!-- Bottom Nav -->
   <div class="bottom-nav">
-    <button class="nav-item active" onclick="switchTab('upload')" id="nav-upload"><span class="nav-icon">📤</span><span>Upload</span></button>
-    <button class="nav-item" onclick="switchTab('gallery')" id="nav-gallery"><span class="nav-icon">🖼️</span><span>Gallery</span></button>
-    <button class="nav-item" onclick="switchTab('timeline')" id="nav-timeline"><span class="nav-icon">📅</span><span>Timeline</span></button>
-    <button class="nav-item" onclick="switchTab('trash')" id="nav-trash"><span class="nav-icon">🗑️</span><span>Trash</span></button>
+    <button class="nav-item" onclick="switchTab('upload')"><span class="nav-icon">📤</span><span>Upload</span></button>
+    <button class="nav-item active" onclick="switchTab('gallery')"><span class="nav-icon">🖼️</span><span>Gallery</span></button>
   </div>
 </div>
 
-<!-- VIEWER -->
+<!-- VIEWER OVERLAY -->
 <div id="viewer" class="viewer hidden">
   <div class="viewer-toolbar">
     <button onclick="closeViewer()">✕</button>
-    <div style="flex:1; color:white; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="v-title">Photo</div>
-    <button onclick="toggleFavViewer()">☆</button>
-    <button onclick="showComments()">💬</button>
+    <div class="v-title" id="v-title">Photo</div>
+    <button onclick="toggleFavViewer()" id="v-star-btn">☆</button>
+    <button onclick="showShareSheetFromViewer()">🔗</button>
     <button onclick="downloadCurrent()">⬇️</button>
-    <button onclick="deleteCurrent()">🗑️</button>
   </div>
   <div class="viewer-img-wrap" id="viewer-img-wrap">
-    <img id="viewer-img" src="" alt="" style="display:none;">
-    <video id="viewer-video" controls style="display:none; max-width:100%; max-height:100%;"></video>
-    <button style="position:absolute; top:50%; left:8px; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; border:none; background:rgba(255,255,255,0.12); color:white; font-size:1.3rem; cursor:pointer;" onclick="viewerPrev()">‹</button>
-    <button style="position:absolute; top:50%; right:8px; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; border:none; background:rgba(255,255,255,0.12); color:white; font-size:1.3rem; cursor:pointer;" onclick="viewerNext()">›</button>
+    <img id="viewer-img" src="" alt="">
+    <button class="viewer-nav prev" onclick="viewerPrev()">‹</button>
+    <button class="viewer-nav next" onclick="viewerNext()">›</button>
   </div>
   <div class="viewer-caption" id="viewer-caption"></div>
-  <div class="viewer-actions">
-    <button onclick="likeCurrent()">❤️</button>
-    <button onclick="shareCurrent()">🔗</button>
-    <button onclick="showComments()">💬 <span id="comment-count">0</span></button>
-  </div>
+  <div class="viewer-details" id="viewer-details"></div>
 </div>
 
-<!-- COMMENTS PANEL -->
-<div id="comments-panel" class="comments-panel hidden" onclick="hideComments(event)">
-  <div onclick="event.stopPropagation()">
-    <h3 style="margin-bottom:12px;">Comments</h3>
-    <div id="comments-list" style="max-height:40vh; overflow-y:auto;"></div>
-    <div class="comment-input">
-      <input type="text" id="comment-text" placeholder="Add a comment...">
-      <button onclick="postComment()">Send</button>
-    </div>
-  </div>
+<!-- BULK BAR -->
+<div id="bulk-bar" class="bulk-bar hidden">
+  <span class="bulk-count" id="bulk-count">0 selected</span>
+  <button class="secondary" onclick="clearSelection()">Cancel</button>
+  <button class="bulk-move" onclick="bulkMove()">Move</button>
+  <button class="bulk-share" onclick="bulkShare()">Share</button>
+  <button class="bulk-danger" onclick="bulkDelete()">Delete</button>
 </div>
 
-<!-- STATS MODAL -->
-<div id="stats-modal" class="modal hidden" onclick="hideModal('stats-modal')">
+<!-- SHARE SHEET MODAL -->
+<div id="share-modal" class="modal hidden" onclick="closeShareSheet(event)">
   <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>📊 Storage Stats</h3>
-    <div class="stats-grid" id="stats-grid"></div>
-    <button class="sheet-close" onclick="hideModal('stats-modal')">Close</button>
+    <h3>Share</h3>
+    <div class="sheet-sub">Choose how to share this photo</div>
+    <div class="sheet-option" onclick="shareCopyLink()">
+      <div class="so-icon">🔗</div>
+      <div class="so-text"><div class="so-title">Copy Link</div><div class="so-desc">Copy a shareable URL to clipboard</div></div>
+    </div>
+    <div class="sheet-option" onclick="shareNative()">
+      <div class="so-icon">📲</div>
+      <div class="so-text"><div class="so-title">Native Share</div><div class="so-desc">Use your device's share menu</div></div>
+    </div>
+    <div class="sheet-option" onclick="shareTelegram()">
+      <div class="so-icon">✈️</div>
+      <div class="so-text"><div class="so-title">Telegram</div><div class="so-desc">Send via Telegram app or bot</div></div>
+    </div>
+    <div class="sheet-option" onclick="shareDownload()">
+      <div class="so-icon">⬇️</div>
+      <div class="so-text"><div class="so-title">Download</div><div class="so-desc">Save to your device</div></div>
+    </div>
+    <div class="sheet-divider"></div>
+    <button class="sheet-close" onclick="hideModal('share-modal')">Cancel</button>
   </div>
 </div>
 
-<!-- SETTINGS MODAL -->
-<div id="settings-modal" class="modal hidden" onclick="hideModal('settings-modal')">
+<!-- MOVE MODAL -->
+<div id="move-modal" class="modal hidden" onclick="hideMoveModal(event)">
   <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>⚙️ Settings</h3>
-    <div class="sheet-option" onclick="showSetPin()">
-      <div style="font-size:1.6rem;">🔐</div>
-      <div style="flex:1;"><div style="font-weight:700;">Set Album PIN</div><div style="color:var(--text-muted); font-size:0.82rem;">Protect with 4-digit code</div></div>
-    </div>
-    <div class="sheet-option" onclick="showInviteModal()">
-      <div style="font-size:1.6rem;">🔗</div>
-      <div style="flex:1;"><div style="font-weight:700;">Invite Members</div><div style="color:var(--text-muted); font-size:0.82rem;">Share album via link or QR</div></div>
-    </div>
-    <div class="sheet-option" onclick="createAlbum()">
-      <div style="font-size:1.6rem;">➕</div>
-      <div style="flex:1;"><div style="font-weight:700;">New Album</div><div style="color:var(--text-muted); font-size:0.82rem;">Create a new photo album</div></div>
-    </div>
-    <div class="sheet-option" onclick="logout()">
-      <div style="font-size:1.6rem;">🚪</div>
-      <div style="flex:1;"><div style="font-weight:700;">Logout</div><div style="color:var(--text-muted); font-size:0.82rem;">Clear session</div></div>
-    </div>
-    <button class="sheet-close" onclick="hideModal('settings-modal')">Done</button>
+    <h3>Move to Album</h3>
+    <div class="sheet-sub">Select destination album</div>
+    <div id="move-profile-list"></div>
+    <button class="sheet-close" onclick="hideModal('move-modal')">Cancel</button>
   </div>
 </div>
 
 <!-- INVITE MODAL -->
-<div id="invite-modal" class="modal hidden" onclick="hideModal('invite-modal')">
+<div id="invite-modal" class="modal hidden" onclick="hideInviteModal(event)">
   <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>🔗 Invite to Album</h3>
-    <div style="color:var(--text-muted); margin-bottom:16px;">Share this album with friends</div>
-    <div class="qr-display" id="qr-display">
-      <div id="qr-code" style="width:200px; height:200px; margin:0 auto; background:var(--bg); display:flex; align-items:center; justify-content:center; color:var(--text-muted);">QR Code</div>
-    </div>
+    <h3>Invite Members</h3>
+    <div class="sheet-sub">Share this link to invite people to this album</div>
     <div class="meta-section" style="padding:0 0 14px;">
       <label>Invite Link</label>
-      <input type="text" id="invite-link" readonly onclick="this.select()">
+      <input type="text" id="invite-link" readonly onclick="this.select()" style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.9rem;outline:none;">
     </div>
-    <div class="sheet-option" onclick="copyInvite()">
-      <div style="font-size:1.6rem;">📋</div>
-      <div style="flex:1;"><div style="font-weight:700;">Copy Link</div></div>
+    <div class="sheet-option" onclick="copyInviteLink()">
+      <div class="so-icon">📋</div>
+      <div class="so-text"><div class="so-title">Copy Link</div><div class="so-desc">Copy to clipboard</div></div>
     </div>
     <div class="sheet-option" onclick="shareInviteNative()">
-      <div style="font-size:1.6rem;">📲</div>
-      <div style="flex:1;"><div style="font-weight:700;">Native Share</div></div>
+      <div class="so-icon">📲</div>
+      <div class="so-text"><div class="so-title">Share Link</div><div class="so-desc">Send via your apps</div></div>
     </div>
     <button class="sheet-close" onclick="hideModal('invite-modal')">Close</button>
   </div>
 </div>
 
-<!-- NEW ALBUM MODAL -->
-<div id="new-album-modal" class="modal hidden" onclick="hideModal('new-album-modal')">
+<!-- PROFILE SETTINGS MODAL -->
+<div id="profile-modal" class="modal hidden" onclick="closeProfileSettings(event)">
   <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>➕ New Album</h3>
-    <div class="meta-section" style="padding:0 0 14px;">
-      <label>Album Name</label>
-      <input type="text" id="new-album-name" placeholder="e.g. Summer Trip 2025">
+    <h3>Album Settings</h3>
+    <div class="sheet-sub">Manage your gallery albums</div>
+    <div id="profile-list"></div>
+    <div class="sheet-divider"></div>
+    <div class="sheet-option" onclick="showAddProfile()">
+      <div class="so-icon">➕</div>
+      <div class="so-text"><div class="so-title">New Album</div><div class="so-desc">Create a new photo album</div></div>
     </div>
-    <button class="sheet-close" style="background:var(--accent); color:white;" onclick="createNewAlbum()">Create</button>
-    <button class="sheet-close" onclick="hideModal('new-album-modal')">Cancel</button>
+    <div class="sheet-divider"></div>
+    <div class="sheet-option" onclick="showInviteModal()">
+      <div class="so-icon">👥</div>
+      <div class="so-text"><div class="so-title">Invite Members</div><div class="so-desc">Get a shareable invite link</div></div>
+    </div>
+    <div class="sheet-option" onclick="disconnectProfile()">
+      <div class="so-icon">🔌</div>
+      <div class="so-text"><div class="so-title">Disconnect Album</div><div class="so-desc">Clear all data for this album</div></div>
+    </div>
+    <button class="sheet-close" onclick="hideModal('profile-modal')">Done</button>
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- ADD PROFILE MODAL -->
+<div id="add-profile-modal" class="modal hidden" onclick="hideAddProfile(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <h3>New Album</h3>
+    <div class="sheet-sub">Create a new gallery album</div>
+    <div class="meta-section" style="padding:0 0 14px;">
+      <label>Album Name</label>
+      <input type="text" id="new-profile-name" placeholder="e.g. Summer Trip">
+    </div>
+    <button class="sheet-close" style="background:var(--accent);color:white;" onclick="createProfile()">Create Album</button>
+    <button class="sheet-close" onclick="hideModal('add-profile-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
 
 <script>
-<!-- TRASH SCREEN -->
-<div id="trash-screen" class="screen hidden">
-  <div class="top-header">
-    <button class="header-btn" onclick="showGallery()">←</button>
-    <h1>🗑️ Trash</h1>
-    <button class="header-btn" onclick="emptyTrash()">🗑️</button>
-  </div>
-  <div class="gallery-grid" id="trash-grid"></div>
-  <div class="empty-state hidden" id="trash-empty">
-    <div class="es-icon">🗑️</div>
-    <div class="es-title">Trash is empty</div>
-    <div class="es-sub">Deleted photos stay here for 30 days</div>
-  </div>
-</div>
+/* ================= API CONFIG ================= */
+const API_BASE = "https://opulent-memory-j47649g65g2ppv4-8000.app.github.dev";
 
-<!-- STATS SCREEN -->
-<div id="stats-screen" class="screen hidden">
-  <div class="top-header">
-    <button class="header-btn" onclick="showGallery()">←</button>
-    <h1>📊 Stats</h1>
-  </div>
-  <div style="padding:16px;">
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
-      <div style="background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center;">
-        <div style="font-size:2rem; font-weight:800; color:var(--accent);" id="stat-photos">0</div>
-        <div style="color:var(--text-muted); font-size:0.85rem;">Photos</div>
+/* ================= STATE ================= */
+let state = {
+  profiles: [],
+  activeProfile: null,
+  photos: [],
+  tags: ['All','Favorites','Photos','Videos','Screenshots','Memes','Nature','Food','Travel','Selfies'],
+  activeTag: 'All',
+  theme: 'light',
+  selectMode: false,
+  selected: new Set(),
+  viewerIndex: 0,
+  pendingFiles: [],
+  shareTarget: null
+};
+const STORAGE_KEY = 'telegallery_v1';
+
+/* ================= INIT ================= */
+function init() {
+  loadState();
+  if (!state.profiles.length) {
+    state.profiles = [
+      { id: 'default', name: 'Personal', icon: '🔒', locked: false, members: ['You'] },
+      { id: 'family', name: 'Family', icon: '👨‍👩‍👧', locked: false, members: ['You'] },
+      { id: 'work', name: 'Work', icon: '💼', locked: false, members: ['You'] }
+    ];
+    state.activeProfile = 'default';
+  }
+  if (!state.photos) state.photos = [];
+  applyTheme();
+  renderProfiles();
+  renderTags();
+  renderGallery();
+  setupDragDrop();
+  setupViewerSwipe();
+  fetchAlbums();
+}
+
+/* ================= STORAGE ================= */
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      Object.assign(state, parsed);
+      state.selected = new Set();
+    }
+  } catch(e) {}
+}
+function saveState() {
+  const toSave = { ...state, selected: [] };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+}
+
+/* ================= THEME ================= */
+function toggleTheme() {
+  state.theme = state.theme === 'light' ? 'dark' : 'light';
+  applyTheme();
+  saveState();
+}
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', state.theme);
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', state.theme === 'dark' ? '#0a0a14' : '#ffffff');
+}
+
+/* ================= PROFILES ================= */
+function renderProfiles() {
+  const bars = ['profile-bar','gallery-profile-bar'];
+  bars.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+    state.profiles.forEach(p => {
+      const chip = document.createElement('div');
+      chip.className = 'profile-chip' + (p.id === state.activeProfile ? ' active' : '');
+      chip.innerHTML = `<span class="p-icon">${p.icon}</span><span>${p.name}</span><span class="p-badge">${countPhotos(p.id)}</span>${p.locked?'<span class="p-lock">🔒</span>':''}`;
+      chip.onclick = () => switchProfile(p.id);
+      el.appendChild(chip);
+    });
+    const add = document.createElement('div');
+    add.className = 'add-profile';
+    add.innerHTML = '+';
+    add.onclick = showAddProfile;
+    el.appendChild(add);
+  });
+  const p = state.profiles.find(x=>x.id===state.activeProfile);
+  document.getElementById('upload-header-title').textContent = p ? `📤 Upload to ${p.name}` : '📤 Upload';
+  document.getElementById('gallery-header-title').textContent = p ? `🖼️ ${p.name}` : '🖼️ Gallery';
+}
+function switchProfile(id) {
+  state.activeProfile = id;
+  state.activeTag = 'All';
+  state.selected.clear();
+  state.selectMode = false;
+  renderProfiles();
+  renderTags();
+  renderGallery();
+  updateBulkBar();
+}
+function countPhotos(profileId) {
+  return state.photos.filter(ph => ph.profile === profileId).length;
+}
+  function showProfileSettings() {
+  const list = document.getElementById('profile-list');
+  list.innerHTML = '';
+  state.profiles.forEach(p => {
+    const isActive = p.id === state.activeProfile;
+    const row = document.createElement('div');
+    row.style.cssText = 'padding:10px 0;border-bottom:1px solid var(--border);';
+    row.innerHTML = `
+      <div class="member-row">
+        <div class="member-avatar">${p.icon}</div>
+        <div class="member-name">${p.name} ${isActive?'<span style="font-size:0.75rem;color:var(--accent);">● active</span>':''}</div>
+        <button class="header-btn" style="width:32px;height:32px;" onclick="deleteProfile('${p.id}')">🗑️</button>
       </div>
-      <div style="background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center;">
-        <div style="font-size:2rem; font-weight:800; color:var(--success);" id="stat-videos">0</div>
-        <div style="color:var(--text-muted); font-size:0.85rem;">Videos</div>
+      <div style="padding-left:46px;">
+        <div class="toggle-row" style="padding:6px 0;" onclick="toggleProfileLock('${p.id}')">
+          <div>
+            <div class="t-label" style="font-size:0.85rem;">Privacy Lock</div>
+            <div class="t-desc" style="font-size:0.75rem;">Require confirmation to open</div>
+          </div>
+          <div class="toggle-switch ${p.locked?'on':''}" id="lock-${p.id}"></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">
+          👤 ${(p.members||['You']).join(', ')}
+        </div>
       </div>
-      <div style="background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center;">
-        <div style="font-size:2rem; font-weight:800; color:var(--warning);" id="stat-total">0</div>
-        <div style="color:var(--text-muted); font-size:0.85rem;">Total</div>
-      </div>
-      <div style="background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center;">
-        <div style="font-size:2rem; font-weight:800; color:var(--danger);" id="stat-trash">0</div>
-        <div style="color:var(--text-muted); font-size:0.85rem;">In Trash</div>
-      </div>
-    </div>
-    <div style="background:var(--surface); border-radius:var(--radius); padding:16px; margin-bottom:12px;">
-      <div style="font-weight:700; margin-bottom:8px;">📅 Timeline</div>
-      <div style="color:var(--text-muted); font-size:0.85rem;" id="stat-dates">Loading...</div>
-    </div>
-  </div>
-</div>
+    `;
+    list.appendChild(row);
+  });
+  showModal('profile-modal');
+}
+function toggleProfileLock(id) {
+  const p = state.profiles.find(x=>x.id===id);
+  if (!p) return;
+  p.locked = !p.locked;
+  saveState();
+  const sw = document.getElementById('lock-'+id);
+  if (sw) sw.classList.toggle('on', p.locked);
+  renderProfiles();
+}
+function closeProfileSettings(e) { if(e.target===e.currentTarget) hideModal('profile-modal'); }
+function deleteProfile(id) {
+  if (state.profiles.length <= 1) { toast('Need at least one album'); return; }
+  if (!confirm('Delete this album and all its photos?')) return;
+  state.profiles = state.profiles.filter(p => p.id !== id);
+  state.photos = state.photos.filter(p => p.profile !== id);
+  if (state.activeProfile === id) state.activeProfile = state.profiles[0].id;
+  saveState();
+  renderProfiles();
+  renderGallery();
+  showProfileSettings({target:document.getElementById('profile-modal'),currentTarget:document.getElementById('profile-modal')});
+}
+function disconnectProfile() {
+  const p = state.profiles.find(x=>x.id===state.activeProfile);
+  if (!p) return;
+  if (!confirm(`Disconnect "${p.name}"? This will delete all ${countPhotos(p.id)} photos in this album.`)) return;
+  state.photos = state.photos.filter(ph => ph.profile !== state.activeProfile);
+  saveState();
+  renderTags();
+  renderGallery();
+  hideModal('profile-modal');
+  toast('Album disconnected');
+}
+function showAddProfile() { document.getElementById('new-profile-name').value=''; showModal('add-profile-modal'); }
+function hideAddProfile(e) { if(e.target===e.currentTarget) hideModal('add-profile-modal'); }
+function createProfile() {
+  const name = document.getElementById('new-profile-name').value.trim();
+  if (!name) { toast('Enter a name'); return; }
+  const id = 'p_' + Date.now();
+  const icons = ['🏠','💼','🎉','🏖️','🍕','📸','🎮','🎵','❤️','🌟'];
+  state.profiles.push({ id, name, icon: icons[state.profiles.length % icons.length], locked: false, members: ['You'] });
+  state.activeProfile = id;
+  saveState();
+  hideModal('add-profile-modal');
+  renderProfiles();
+  renderGallery();
+  toast('Album created');
+}
 
-<!-- TIMELINE SCREEN -->
-<div id="timeline-screen" class="screen hidden">
-  <div class="top-header">
-    <button class="header-btn" onclick="showGallery()">←</button>
-    <h1>📅 Timeline</h1>
-  </div>
-  <div style="padding:16px;" id="timeline-content">
-    <div style="text-align:center; color:var(--text-muted); padding:40px;">Loading timeline...</div>
-  </div>
-</div>
+/* ================= INVITE ================= */
+function showInviteModal() {
+  const p = state.profiles.find(x=>x.id===state.activeProfile);
+  const link = location.origin + location.pathname + '?join=' + encodeURIComponent(state.activeProfile) + '&name=' + encodeURIComponent(p?p.name:'Album');
+  document.getElementById('invite-link').value = link;
+  showModal('invite-modal');
+}
+function hideInviteModal(e) { if(e.target===e.currentTarget) hideModal('invite-modal'); }
+function copyInviteLink() {
+  const el = document.getElementById('invite-link');
+  el.select();
+  navigator.clipboard.writeText(el.value).then(()=>toast('Invite link copied'));
+}
+function shareInviteNative() {
+  const el = document.getElementById('invite-link');
+  const p = state.profiles.find(x=>x.id===state.activeProfile);
+  if (navigator.share) {
+    navigator.share({ title: 'Join my ' + (p?p.name:'TeleGallery') + ' album', url: el.value }).catch(()=>{});
+  } else {
+    toast('Native share not available');
+  }
+}
 
-<!-- COMMENTS MODAL -->
-<div id="comments-modal" class="modal hidden" onclick="hideCommentsModal(event)">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>💬 Comments</h3>
-    <div id="comments-list" style="max-height:300px; overflow-y:auto; margin:12px 0;"></div>
-    <div style="display:flex; gap:8px; margin-top:12px;">
-      <input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1; padding:10px; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text);">
-      <button style="padding:10px 16px; background:var(--accent); color:white; border:none; border-radius:var(--radius-sm); font-weight:600;" onclick="postComment()">Send</button>
-    </div>
-    <button class="sheet-close" style="margin-top:10px;" onclick="hideModal('comments-modal')">Close</button>
-  </div>
-</div>
+/* ================= TAGS ================= */
+function renderTags() {
+  const ids = ['upload-tags','gallery-tags'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+    state.tags.forEach(tag => {
+      const count = tag === 'All' ? countPhotos(state.activeProfile) :
+        tag === 'Favorites' ? state.photos.filter(p=>p.profile===state.activeProfile&&p.fav).length :
+        state.photos.filter(p=>p.profile===state.activeProfile&&p.tags&&p.tags.includes(tag)).length;
+      const pill = document.createElement('div');
+      pill.className = 'tag-pill' + (state.activeTag === tag ? ' active' : '');
+      pill.innerHTML = `${tag}<span class="count">${count}</span>`;
+      pill.onclick = () => { state.activeTag = tag; renderTags(); renderGallery(); };
+      el.appendChild(pill);
+    });
+  });
+}
 
-<!-- QR INVITE MODAL -->
-<div id="qr-modal" class="modal hidden" onclick="hideModal('qr-modal')">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>🔗 Share Album</h3>
-    <div style="text-align:center; padding:20px;">
-      <div id="qr-code-display" style="width:200px; height:200px; margin:0 auto 16px; background:var(--surface); border-radius:var(--radius); display:flex; align-items:center; justify-content:center; font-size:4rem;">📱</div>
-      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;" id="qr-expiry">Expires in 7 days</div>
-      <button class="sheet-close" style="background:var(--accent); color:white;" onclick="copyInviteLink()">Copy Link</button>
-    </div>
-    <button class="sheet-close" onclick="hideModal('qr-modal')">Close</button>
-  </div>
-</div>
+/* ================= UPLOAD ================= */
+function setupDragDrop() {
+  const dz = document.getElementById('drop-zone');
+  ['dragenter','dragover','dragleave','drop'].forEach(evt => {
+    dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); });
+  });
+  dz.addEventListener('dragenter', () => dz.classList.add('dragover'));
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', e => {
+    dz.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+}
+function handleFiles(files) {
+  if (!files.length) return;
+  Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      state.pendingFiles.push({ name: file.name, data: e.target.result, type: file.type });
+      renderPreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function renderPreviews() {
+  const grid = document.getElementById('preview-grid');
+  grid.classList.toggle('hidden', !state.pendingFiles.length);
+  grid.innerHTML = '';
+  state.pendingFiles.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'preview-item';
+    div.innerHTML = `<img src="${f.data}" alt=""><button class="remove" onclick="removePending(${i})">✕</button>`;
+    grid.appendChild(div);
+  });
+}
+function removePending(i) {
+  state.pendingFiles.splice(i, 1);
+  renderPreviews();
+}
+
+/* ================= API: FETCH ALBUMS & PHOTOS ================= */
+async function fetchAlbums() {
+  try {
+    const res = await fetch(`${API_BASE}/profiles/default/albums?token=demo-token`);
+    const data = await res.json();
+    console.log('Albums from backend:', data);
+    if (data.albums) {
+      // Update tag counts from backend if needed
+    }
+  } catch (err) {
+    console.error('Fetch albums failed:', err);
+  }
+}
+
+async function fetchPhotos(albumId) {
+  try {
+    const res = await fetch(`${API_BASE}/profiles/default/photos?token=demo-token&album_id=${albumId || 'all'}`);
+    const data = await res.json();
+    console.log('Photos from backend:', data);
+    return data.photos || [];
+  } catch (err) {
+    console.error('Fetch photos failed:', err);
+    return [];
+  }
+}
+
+/* ================= UPLOAD TO BACKEND ================= */
+async function uploadToBackend() {
+  if (!state.pendingFiles.length) { toast('No files selected'); return; }
+  const btn = document.getElementById('upload-btn');
+  const wrap = document.getElementById('progress-wrap');
+  const fill = document.getElementById('progress-fill');
+  const text = document.getElementById('progress-text');
+  btn.disabled = true;
+  wrap.classList.remove('hidden');
+  let done = 0;
+  const total = state.pendingFiles.length;
+  const caption = document.getElementById('caption-input').value;
+
+  for (const file of state.pendingFiles) {
+    try {
+      const blob = await fetch(file.data).then(r => r.blob());
+      const formData = new FormData();
+      formData.append('token', 'demo-token');
+      formData.append('caption', done === 0 ? caption : '');
+      formData.append('files', blob, file.name);
+
+      const res = await fetch(`${API_BASE}/profiles/default/albums/all/photos`, {
+        method: 'POST',
+        body: formData
+      });
+      const result = await res.json();
+      if (result.uploaded && result.uploaded[0] && result.uploaded[0].status === 'ok') {
+        done++;
+        fill.style.width = Math.round((done/total)*100) + '%';
+        text.textContent = `Uploading ${done}/${total}...`;
+      } else {
+        toast('Upload failed: ' + (result.uploaded?.[0]?.error || 'Unknown error'));
+      }
+    } catch (err) {
+      toast('Upload failed: ' + err.message);
+      console.error(err);
+    }
+  }
+
+  fill.style.width = '100%';
+  text.textContent = 'Done!';
+  setTimeout(() => {
+    state.pendingFiles = [];
+    renderPreviews();
+    wrap.classList.add('hidden');
+    fill.style.width = '0%';
+    btn.disabled = false;
+    document.getElementById('caption-input').value = '';
+    saveState();
+    renderTags();
+    renderGallery();
+    toast('Uploaded to Telegram!');
+    fetchAlbums();
+  }, 600);
+    }
+  /* ================= GALLERY ================= */
+function renderGallery() {
+  const grid = document.getElementById('gallery-grid');
+  const empty = document.getElementById('empty-state');
+  let photos = state.photos.filter(p => p.profile === state.activeProfile);
+  const q = document.getElementById('gallery-search').value.trim().toLowerCase();
+  if (q) photos = photos.filter(p => (p.name||'').toLowerCase().includes(q) || (p.caption||'').toLowerCase().includes(q));
+  if (state.activeTag === 'Favorites') photos = photos.filter(p => p.fav);
+  else if (state.activeTag !== 'All') photos = photos.filter(p => p.tags && p.tags.includes(state.activeTag));
+  photos.sort((a,b) => new Date(b.date) - new Date(a.date));
+  grid.innerHTML = '';
+  if (!photos.length) {
+    grid.classList.add('hidden');
+    empty.classList.remove('hidden');
+    return;
+  }
+  grid.classList.remove('hidden');
+  empty.classList.add('hidden');
+  photos.forEach((ph, idx) => {
+    const card = document.createElement('div');
+    card.className = 'photo-card' + (state.selected.has(ph.id) ? ' selected' : '');
+    const isVideo = ph.src && ph.src.startsWith('data:video');
+    card.innerHTML = `
+      <img src="${ph.src}" alt="${ph.name}" loading="lazy">
+      ${ph.fav ? '<button class="star faved" onclick="toggleFav(event,\''+ph.id+'\')">★</button>' : '<button class="star" onclick="toggleFav(event,\''+ph.id+'\')">☆</button>'}
+      <div class="select-ring" onclick="toggleSelect(event,'${ph.id}')">${state.selected.has(ph.id)?'✓':''}</div>
+      <div class="info-bar"><span>${isVideo?'▶️':''} ${formatSize(ph.size)}</span><span>${formatDate(ph.date)}</span></div>
+    `;
+    card.onclick = (e) => {
+      if (state.selectMode || e.target.closest('.star') || e.target.closest('.select-ring')) return;
+      openViewer(ph.id);
+    };
+    grid.appendChild(card);
+  });
+}
+function doSearch() { renderGallery(); }
+function formatSize(s) {
+  if (!s) return '';
+  const kb = Math.round(s/1024);
+  if (kb < 1024) return kb + ' KB';
+  return (kb/1024).toFixed(1) + ' MB';
+}
+function formatDate(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  return date.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+}
+
+/* ================= SELECTION ================= */
+function toggleSelectMode() {
+  state.selectMode = !state.selectMode;
+  if (!state.selectMode) state.selected.clear();
+  renderGallery();
+  updateBulkBar();
+}
+function toggleSelect(e, id) {
+  e.stopPropagation();
+  if (state.selected.has(id)) state.selected.delete(id);
+  else state.selected.add(id);
+  if (!state.selectMode && state.selected.size) state.selectMode = true;
+  renderGallery();
+  updateBulkBar();
+}
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar');
+  if (state.selected.size) {
+    bar.classList.remove('hidden');
+    document.getElementById('bulk-count').textContent = `${state.selected.size} selected`;
+  } else {
+    bar.classList.add('hidden');
+  }
+}
+function clearSelection() {
+  state.selected.clear();
+  state.selectMode = false;
+  renderGallery();
+  updateBulkBar();
+}
+function bulkDelete() {
+  if (!confirm(`Delete ${state.selected.size} photos?`)) return;
+  state.photos = state.photos.filter(p => !state.selected.has(p.id));
+  state.selected.clear();
+  state.selectMode = false;
+  saveState();
+  renderGallery();
+  renderTags();
+  updateBulkBar();
+  toast('Deleted');
+}
+function bulkShare() {
+  const ids = Array.from(state.selected);
+  if (!ids.length) return;
+  state.shareTarget = ids;
+  showModal('share-modal');
+}
+function bulkMove() {
+  const ids = Array.from(state.selected);
+  if (!ids.length) return;
+  state.shareTarget = ids;
+  const list = document.getElementById('move-profile-list');
+  list.innerHTML = '';
+  state.profiles.forEach(p => {
+    if (p.id === state.activeProfile) return;
+    const row = document.createElement('div');
+    row.className = 'sheet-option';
+    row.innerHTML = `<div class="so-icon">${p.icon}</div><div class="so-text"><div class="so-title">${p.name}</div><div class="so-desc">${countPhotos(p.id)} items</div></div>`;
+    row.onclick = () => executeMove(p.id);
+    list.appendChild(row);
+  });
+  showModal('move-modal');
+}
+function hideMoveModal(e) { if(e.target===e.currentTarget) hideModal('move-modal'); }
+function executeMove(targetId) {
+  const ids = Array.isArray(state.shareTarget) ? state.shareTarget : [];
+  let moved = 0;
+  state.photos.forEach(ph => {
+    if (ids.includes(ph.id)) { ph.profile = targetId; moved++; }
+  });
+  state.selected.clear();
+  state.selectMode = false;
+  saveState();
+  renderProfiles();
+  renderTags();
+  renderGallery();
+  updateBulkBar();
+  hideModal('move-modal');
+  toast(`Moved ${moved} photos`);
+}
+
+/* ================= VIEWER ================= */
+function openViewer(id) {
+  const photos = getVisiblePhotos();
+  const idx = photos.findIndex(p => p.id === id);
+  if (idx === -1) return;
+  state.viewerIndex = idx;
+  updateViewer(photos);
+  document.getElementById('viewer').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function getVisiblePhotos() {
+  let photos = state.photos.filter(p => p.profile === state.activeProfile);
+  const q = document.getElementById('gallery-search').value.trim().toLowerCase();
+  if (q) photos = photos.filter(p => (p.name||'').toLowerCase().includes(q) || (p.caption||'').toLowerCase().includes(q));
+  if (state.activeTag === 'Favorites') photos = photos.filter(p => p.fav);
+  else if (state.activeTag !== 'All') photos = photos.filter(p => p.tags && p.tags.includes(state.activeTag));
+  photos.sort((a,b) => new Date(b.date) - new Date(a.date));
+  return photos;
+}
+function updateViewer(photos) {
+  const ph = photos[state.viewerIndex];
+  if (!ph) { closeViewer(); return; }
+  document.getElementById('viewer-img').src = ph.src;
+  document.getElementById('v-title').textContent = ph.name || 'Photo';
+  document.getElementById('viewer-caption').textContent = ph.caption || '';
+  document.getElementById('viewer-details').innerHTML = `<span>${formatDate(ph.date)}</span><span>${formatSize(ph.size)}</span><span>${ph.profile}</span>`;
+  document.getElementById('v-star-btn').textContent = ph.fav ? '★' : '☆';
+  document.getElementById('v-star-btn').style.color = ph.fav ? 'var(--warning)' : 'white';
+}
+function closeViewer() {
+  document.getElementById('viewer').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+function viewerPrev() {
+  const photos = getVisiblePhotos();
+  state.viewerIndex = (state.viewerIndex - 1 + photos.length) % photos.length;
+  updateViewer(photos);
+}
+function viewerNext() {
+  const photos = getVisiblePhotos();
+  state.viewerIndex = (state.viewerIndex + 1) % photos.length;
+  updateViewer(photos);
+}
+function toggleFavViewer() {
+  const photos = getVisiblePhotos();
+  const ph = photos[state.viewerIndex];
+  if (!ph) return;
+  ph.fav = !ph.fav;
+  saveState();
+  updateViewer(photos);
+  renderGallery();
+  renderTags();
+}
+function toggleFav(e, id) {
+  e.stopPropagation();
+  const ph = state.photos.find(p => p.id === id);
+  if (ph) { ph.fav = !ph.fav; saveState(); renderGallery(); renderTags(); }
+}
+function downloadCurrent() {
+  const photos = getVisiblePhotos();
+  const ph = photos[state.viewerIndex];
+  if (!ph) return;
+  const a = document.createElement('a');
+  a.href = ph.src;
+  a.download = ph.name || 'download';
+  a.click();
+  toast('Downloading...');
+}
+function showShareSheetFromViewer() {
+  const photos = getVisiblePhotos();
+  const ph = photos[state.viewerIndex];
+  state.shareTarget = ph ? [ph.id] : [];
+  showModal('share-modal');
+}
+
+/* ================= VIEWER SWIPE ================= */
+function setupViewerSwipe() {
+  const wrap = document.getElementById('viewer-img-wrap');
+  let startX = 0, startY = 0, dx = 0, dy = 0, tracking = false;
+  wrap.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dx = 0; dy = 0;
+    tracking = true;
+  }, { passive: true });
+  wrap.addEventListener('touchmove', e => {
+    if (!tracking || e.touches.length !== 1) return;
+    dx = e.touches[0].clientX - startX;
+    dy = e.touches[0].clientY - startY;
+    const img = document.getElementById('viewer-img');
+    if (Math.abs(dx) > Math.abs(dy)) {
+      img.style.transform = `translateX(${dx}px) scale(0.98)`;
+      img.style.transition = 'none';
+    }
+  }, { passive: true });
+  wrap.addEventListener('touchend', e => {
+    if (!tracking) return;
+    tracking = false;
+    const img = document.getElementById('viewer-img');
+    img.style.transition = 'transform 0.25s ease';
+    img.style.transform = '';
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 0) viewerPrev(); else viewerNext();
+    }
+  });
+}
+
+/* ================= SHARE ================= */
+function closeShareSheet(e) { if(e.target===e.currentTarget) hideModal('share-modal'); }
+function shareCopyLink() {
+  const ids = Array.isArray(state.shareTarget) ? state.shareTarget : [];
+  const text = 'TeleGallery shared photos: ' + ids.join(', ');
+  navigator.clipboard.writeText(text).then(() => toast('Link copied'));
+  hideModal('share-modal');
+}
+function shareNative() {
+  const ids = Array.isArray(state.shareTarget) ? state.shareTarget : [];
+  const photos = state.photos.filter(p => ids.includes(p.id));
+  if (!photos.length) return;
+  if (navigator.share) {
+    navigator.share({
+      title: 'TeleGallery Photos',
+      text: photos.map(p => p.caption || p.name).join('\n'),
+      url: location.href
+    }).catch(()=>{});
+  } else {
+    toast('Native share not supported');
+  }
+  hideModal('share-modal');
+}
+function shareTelegram() {
+  const ids = Array.isArray(state.shareTarget) ? state.shareTarget : [];
+  const photos = state.photos.filter(p => ids.includes(p.id));
+  if (!photos.length) return;
+  const text = photos.map(p => p.caption || p.name).join('\n');
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(location.href) + '&text=' + encodeURIComponent(text);
+  window.open(url, '_blank');
+  hideModal('share-modal');
+}
+function shareDownload() {
+  const ids = Array.isArray(state.shareTarget) ? state.shareTarget : [];
+  ids.forEach(id => {
+    const ph = state.photos.find(p => p.id === id);
+    if (ph) { const a=document.createElement('a'); a.href=ph.src; a.download=ph.name||'photo'; a.click(); }
+  });
+  toast('Downloaded');
+  hideModal('share-modal');
+    }
+  /* ================= NAVIGATION ================= */
+function switchTab(tab) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(tab + '-screen').classList.remove('hidden');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (tab === 'upload') {
+    document.querySelectorAll('.nav-item')[0].classList.add('active');
+    document.querySelectorAll('.nav-item')[1].classList.remove('active');
+  } else {
+    document.querySelectorAll('.nav-item')[0].classList.remove('active');
+    document.querySelectorAll('.nav-item')[1].classList.add('active');
+    renderGallery();
+  }
+}
+
+/* ================= MODALS ================= */
+function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+/* ================= TOAST ================= */
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+/* ================= KEYBOARD ================= */
+document.addEventListener('keydown', e => {
+  if (document.getElementById('viewer').classList.contains('hidden')) return;
+  if (e.key === 'Escape') closeViewer();
+  if (e.key === 'ArrowLeft') viewerPrev();
+  if (e.key === 'ArrowRight') viewerNext();
+});
+
+/* ================= START ================= */
+init();
 
 
-/* ================= PIN ================= */
+/* ================= AUTH & PIN ================= */
+let currentUser = null;
+let currentInvite = null;
 let pinBuffer = '';
 let pinCallback = null;
+let currentPhotoId = null;
+let currentInviteUrl = '';
+
+function checkAuth() {
+  const token = localStorage.getItem('tg_token');
+  const invite = new URLSearchParams(location.search).get('invite');
+
+  if (invite) {
+    currentInvite = invite;
+    loadInviteInfo(invite);
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('invite-screen').classList.remove('hidden');
+    return;
+  }
+
+  if (!token) {
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('upload-screen').classList.add('hidden');
+    return;
+  }
+
+  fetch(`${API_BASE}/api/auth/me?token=${token}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.id) {
+        currentUser = data;
+        if (data.has_pin) {
+          showPinScreen(() => verifyAndLogin(token));
+        } else {
+          showApp();
+        }
+      } else {
+        localStorage.removeItem('tg_token');
+        showAuth();
+      }
+    })
+    .catch(() => showAuth());
+}
+
+function verifyAndLogin(token) {
+  fetch(`${API_BASE}/api/auth/verify-pin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `token=${encodeURIComponent(token)}&pin=${encodeURIComponent(pinBuffer)}`
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        hidePinScreen();
+        showApp();
+      } else {
+        pinBuffer = '';
+        updatePinDots();
+        toast('Wrong PIN');
+      }
+    })
+    .catch(() => {
+      pinBuffer = '';
+      updatePinDots();
+      toast('PIN check failed');
+    });
+}
 
 function showPinScreen(callback) {
   pinBuffer = '';
   pinCallback = callback;
   updatePinDots();
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   document.getElementById('pin-screen').classList.remove('hidden');
-  document.getElementById('upload-screen').classList.add('hidden');
-  document.getElementById('gallery-screen').classList.add('hidden');
 }
 
 function enterPin(num) {
@@ -598,6 +1241,154 @@ function hidePinScreen() {
   document.getElementById('pin-screen').classList.add('hidden');
 }
 
+function showApp() {
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('upload-screen').classList.remove('hidden');
+  init();
+}
+
+function showAuth() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById('auth-screen').classList.remove('hidden');
+}
+
+function showRegister() {
+  document.getElementById('login-form').classList.add('hidden');
+  document.getElementById('register-form').classList.remove('hidden');
+}
+
+function showLogin() {
+  document.getElementById('register-form').classList.add('hidden');
+  document.getElementById('login-form').classList.remove('hidden');
+}
+
+async function login() {
+  const token = document.getElementById('auth-token').value.trim();
+  if (!token) { toast('Enter your token'); return; }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `token=${encodeURIComponent(token)}`
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      localStorage.setItem('tg_token', token);
+      currentUser = data.user;
+      if (data.user.has_pin) {
+        showPinScreen(() => verifyAndLogin(token));
+      } else {
+        showApp();
+      }
+      toast(`Welcome back, ${data.user.name}!`);
+    } else {
+      toast('Invalid token');
+    }
+  } catch (err) {
+    toast('Login failed: ' + err.message);
+  }
+}
+
+async function register() {
+  const name = document.getElementById('reg-name').value.trim();
+  const apiId = document.getElementById('reg-api-id').value.trim();
+  const apiHash = document.getElementById('reg-api-hash').value.trim();
+  const botToken = document.getElementById('reg-bot-token').value.trim();
+  const groupId = document.getElementById('reg-group-id').value.trim();
+  const pin = document.getElementById('reg-pin') ? document.getElementById('reg-pin').value.trim() : '';
+
+  if (!name || !apiId || !apiHash || !botToken || !groupId) {
+    toast('Fill all fields'); return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('api_id', apiId);
+    formData.append('api_hash', apiHash);
+    formData.append('bot_token', botToken);
+    formData.append('group_id', groupId);
+    if (pin) formData.append('pin', pin);
+
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      localStorage.setItem('tg_token', data.token);
+      toast('Account created! Logging in...');
+      currentUser = { id: data.user_id, name: name };
+      if (pin) {
+        showPinScreen(() => {
+          hidePinScreen();
+          showApp();
+        });
+      } else {
+        showApp();
+      }
+    } else {
+      toast(data.detail || 'Registration failed');
+    }
+  } catch (err) {
+    toast('Registration failed: ' + err.message);
+  }
+}
+
+function logout() {
+  localStorage.removeItem('tg_token');
+  currentUser = null;
+  showAuth();
+  toast('Logged out');
+}
+
+/* ================= INVITES ================= */
+async function loadInviteInfo(inviteId) {
+  try {
+    const res = await fetch(`${API_BASE}/api/invites/${inviteId}`);
+    const data = await res.json();
+    document.getElementById('invite-owner').textContent = `Album by ${data.owner_name}`;
+  } catch (err) {
+    document.getElementById('invite-owner').textContent = 'Invalid invite link';
+  }
+}
+
+async function acceptInvite() {
+  if (!currentInvite) return;
+  toast('Joining album...');
+  document.getElementById('invite-screen').classList.add('hidden');
+  document.getElementById('upload-screen').classList.remove('hidden');
+}
+
+async function createInvite(albumId) {
+  const token = localStorage.getItem('tg_token');
+  if (!token) { toast('Login first'); return; }
+
+  try {
+    const formData = new FormData();
+    formData.append('token', token);
+    formData.append('album_id', albumId);
+
+    const res = await fetch(`${API_BASE}/api/invites`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+
+    if (data.invite_id) {
+      const fullUrl = `${location.origin}${location.pathname}?invite=${data.invite_id}`;
+      navigator.clipboard.writeText(fullUrl);
+      toast('Invite link copied!');
+      return fullUrl;
+    }
+  } catch (err) {
+    toast('Failed to create invite');
+  }
+}
+
 /* ================= TRASH ================= */
 async function showTrash() {
   const token = localStorage.getItem('tg_token');
@@ -630,8 +1421,8 @@ async function showTrash() {
             </div>
           </div>
           <div style="position:absolute; bottom:0; left:0; right:0; padding:8px; display:flex; gap:6px; background:linear-gradient(transparent, rgba(0,0,0,0.6));">
-            <button style="flex:1; padding:6px; border:none; border-radius:6px; background:var(--success); color:white; font-size:0.75rem; font-weight:600;" onclick="restorePhoto(${item.photo_id})">Restore</button>
-            <button style="flex:1; padding:6px; border:none; border-radius:6px; background:var(--danger); color:white; font-size:0.75rem; font-weight:600;" onclick="permanentDelete(${item.photo_id})">Delete</button>
+            <button type="button" style="flex:1; padding:6px; border:none; border-radius:6px; background:var(--success); color:white; font-size:0.75rem; font-weight:600; cursor:pointer;" onclick="restorePhoto(${item.photo_id})">Restore</button>
+            <button type="button" style="flex:1; padding:6px; border:none; border-radius:6px; background:var(--danger); color:white; font-size:0.75rem; font-weight:600; cursor:pointer;" onclick="permanentDelete(${item.photo_id})">Delete</button>
           </div>
         `;
         grid.appendChild(card);
@@ -766,7 +1557,6 @@ async function showTimeline() {
 }
 
 function openViewerById(photoId) {
-  // Find photo in state and open viewer
   const photo = state.photos.find(p => p.id === photoId);
   if (photo) {
     openViewer(photoId);
@@ -776,8 +1566,6 @@ function openViewerById(photoId) {
 }
 
 /* ================= COMMENTS ================= */
-let currentPhotoId = null;
-
 async function showComments(photoId) {
   currentPhotoId = photoId;
   const token = localStorage.getItem('tg_token');
@@ -841,8 +1629,6 @@ function hideCommentsModal(e) {
 }
 
 /* ================= QR INVITES ================= */
-let currentInviteUrl = '';
-
 async function showQrInvite(albumId) {
   const token = localStorage.getItem('tg_token');
   if (!token) { toast('Login first'); return; }
@@ -876,31 +1662,7 @@ function copyInviteLink() {
   }
 }
 
-/* ================= VIDEO PLAYBACK ================= */
-function playVideo(photoId) {
-  const video = state.photos.find(p => p.id === photoId);
-  if (!video) return;
-
-  const token = localStorage.getItem('tg_token');
-  const url = `${API_BASE}/api/photos/${photoId}/download?token=${token}`;
-
-  const viewer = document.getElementById('viewer');
-  const imgWrap = document.getElementById('viewer-img-wrap');
-
-  // Replace image with video
-  imgWrap.innerHTML = `
-    <video controls autoplay style="max-width:100%; max-height:72vh; border-radius:4px;">
-      <source src="${url}" type="video/mp4">
-    </video>
-    <button class="viewer-nav prev" onclick="viewerPrev()">‹</button>
-    <button class="viewer-nav next" onclick="viewerNext()">›</button>
-  `;
-
-  viewer.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-}
-
-/* ================= NAVIGATION HELPERS ================= */
+/* ================= NAVIGATION ================= */
 function showGallery() {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   document.getElementById('gallery-screen').classList.remove('hidden');
@@ -912,63 +1674,96 @@ function showUpload() {
   document.getElementById('upload-screen').classList.remove('hidden');
 }
 
-/* ================= UPDATED VIEWER FOR VIDEO ================= */
-const originalOpenViewer = openViewer;
-openViewer = function(id) {
-  const photos = getVisiblePhotos();
-  const photo = photos.find(p => p.id === id);
-
-  if (photo && photo.type === 'video') {
-    playVideo(id);
-    return;
-  }
-
-  originalOpenViewer(id);
+/* ================= INIT OVERRIDE ================= */
+const originalInit = init;
+init = function() {
+  checkAuth();
 };
 
-/* ================= MOVE TO TRASH FROM GALLERY ================= */
-async function moveToTrash(photoId) {
-  if (!confirm('Move to trash?')) return;
-  const token = localStorage.getItem('tg_token');
-  try {
-    await fetch(`${API_BASE}/api/photos/${photoId}/trash`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `token=${encodeURIComponent(token)}`
-    });
-    state.photos = state.photos.filter(p => p.id !== photoId);
-    saveState();
-    renderGallery();
-    renderTags();
-    toast('Moved to trash');
-  } catch (err) {
-    toast('Failed to move to trash');
-  }
-}
+</script>
+<!-- TRASH SCREEN -->
+<div id="trash-screen" class="screen hidden">
+  <div class="top-header">
+    <button type="button" class="header-btn" onclick="showGallery()">←</button>
+    <h1>🗑️ Trash</h1>
+    <button type="button" class="header-btn" onclick="emptyTrash()">🗑️</button>
+  </div>
+  <div class="gallery-grid" id="trash-grid"></div>
+  <div class="empty-state hidden" id="trash-empty">
+    <div class="es-icon">🗑️</div>
+    <div class="es-title">Trash is empty</div>
+    <div class="es-sub">Deleted photos stay here for 30 days</div>
+  </div>
+</div>
 
-/* ================= BULK TRASH ================= */
-async function bulkTrash() {
-  const ids = Array.from(state.selected);
-  if (!ids.length) return;
-  if (!confirm(`Move ${ids.length} photos to trash?`)) return;
+<!-- STATS SCREEN -->
+<div id="stats-screen" class="screen hidden">
+  <div class="top-header">
+    <button type="button" class="header-btn" onclick="showGallery()">←</button>
+    <h1>📊 Stats</h1>
+  </div>
+  <div style="padding:16px;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+      <div style="background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center;">
+        <div style="font-size:2rem; font-weight:800; color:var(--accent);" id="stat-photos">0</div>
+        <div style="color:var(--text-muted); font-size:0.85rem;">Photos</div>
+      </div>
+      <div style="background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center;">
+        <div style="font-size:2rem; font-weight:800; color:var(--success);" id="stat-videos">0</div>
+        <div style="color:var(--text-muted); font-size:0.85rem;">Videos</div>
+      </div>
+      <div style="background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center;">
+        <div style="font-size:2rem; font-weight:800; color:var(--warning);" id="stat-total">0</div>
+        <div style="color:var(--text-muted); font-size:0.85rem;">Total</div>
+      </div>
+      <div style="background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center;">
+        <div style="font-size:2rem; font-weight:800; color:var(--danger);" id="stat-trash">0</div>
+        <div style="color:var(--text-muted); font-size:0.85rem;">In Trash</div>
+      </div>
+    </div>
+    <div style="background:var(--surface); border-radius:var(--radius); padding:16px; margin-bottom:12px;">
+      <div style="font-weight:700; margin-bottom:8px;">📅 Timeline</div>
+      <div style="color:var(--text-muted); font-size:0.85rem;" id="stat-dates">Loading...</div>
+    </div>
+  </div>
+</div>
 
-  const token = localStorage.getItem('tg_token');
-  for (const id of ids) {
-    try {
-      await fetch(`${API_BASE}/api/photos/${id}/trash`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `token=${encodeURIComponent(token)}`
-      });
-    } catch (e) {}
-  }
+<!-- TIMELINE SCREEN -->
+<div id="timeline-screen" class="screen hidden">
+  <div class="top-header">
+    <button type="button" class="header-btn" onclick="showGallery()">←</button>
+    <h1>📅 Timeline</h1>
+  </div>
+  <div style="padding:16px;" id="timeline-content">
+    <div style="text-align:center; color:var(--text-muted); padding:40px;">Loading timeline...</div>
+  </div>
+</div>
 
-  state.photos = state.photos.filter(p => !state.selected.has(p.id));
-  state.selected.clear();
-  state.selectMode = false;
-  saveState();
-  renderGallery();
-  renderTags();
-  updateBulkBar();
-  toast('Moved to trash');
-}
+<!-- COMMENTS MODAL -->
+<div id="comments-modal" class="modal hidden" onclick="hideCommentsModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <h3>💬 Comments</h3>
+    <div id="comments-list" style="max-height:300px; overflow-y:auto; margin:12px 0;"></div>
+    <div style="display:flex; gap:8px; margin-top:12px;">
+      <input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1; padding:10px; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-size:0.95rem; outline:none;">
+      <button type="button" style="padding:10px 16px; background:var(--accent); color:white; border:none; border-radius:var(--radius-sm); font-weight:600; cursor:pointer;" onclick="postComment()">Send</button>
+    </div>
+    <button type="button" class="sheet-close" style="margin-top:10px;" onclick="hideModal('comments-modal')">Close</button>
+  </div>
+</div>
+
+<!-- QR INVITE MODAL -->
+<div id="qr-modal" class="modal hidden" onclick="hideModal('qr-modal')">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <h3>🔗 Share Album</h3>
+    <div style="text-align:center; padding:20px;">
+      <div id="qr-code-display" style="width:200px; height:200px; margin:0 auto 16px; background:var(--surface); border-radius:var(--radius); display:flex; align-items:center; justify-content:center; font-size:4rem;">📱</div>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;" id="qr-expiry">Expires in 7 days</div>
+      <button type="button" class="sheet-close" style="background:var(--accent); color:white;" onclick="copyInviteLink()">Copy Link</button>
+    </div>
+    <button type="button" class="sheet-close" onclick="hideModal('qr-modal')">Close</button>
+  </div>
+</div>
+
+</body>
+</html>
