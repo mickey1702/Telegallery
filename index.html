@@ -247,6 +247,61 @@ body {
 <base target="_blank">
 </head>
 <body>
+<!-- LOGIN / REGISTER SCREEN -->
+<div id="auth-screen" class="screen">
+  <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center;">
+    <div style="font-size:3rem; margin-bottom:20px;">📸</div>
+    <h1 style="font-size:1.5rem; margin-bottom:8px;">TeleGallery</h1>
+    <p style="color:var(--text-muted); margin-bottom:30px; max-width:280px;">Your personal cloud gallery powered by Telegram</p>
+
+    <div id="login-form" style="width:100%; max-width:320px;">
+      <div class="meta-section" style="padding:0 0 12px;">
+        <label>Your Access Token</label>
+        <input type="password" id="auth-token" placeholder="Paste your token here..." style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.95rem;outline:none;">
+      </div>
+      <button class="sheet-close" style="background:var(--accent);color:white;margin-bottom:10px;" onclick="login()">🔐 Login</button>
+      <p style="color:var(--text-muted); font-size:0.85rem;">New here? <a href="#" onclick="showRegister()" style="color:var(--accent); text-decoration:none; font-weight:600;">Create your own cloud</a></p>
+    </div>
+
+    <div id="register-form" class="hidden" style="width:100%; max-width:320px;">
+      <div class="meta-section" style="padding:0 0 10px;">
+        <label>Your Name</label>
+        <input type="text" id="reg-name" placeholder="e.g. John" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.95rem;outline:none;">
+      </div>
+      <div class="meta-section" style="padding:0 0 10px;">
+        <label>Telegram API ID</label>
+        <input type="text" id="reg-api-id" placeholder="Get from my.telegram.org" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.95rem;outline:none;">
+      </div>
+      <div class="meta-section" style="padding:0 0 10px;">
+        <label>Telegram API Hash</label>
+        <input type="text" id="reg-api-hash" placeholder="Get from my.telegram.org" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.95rem;outline:none;">
+      </div>
+      <div class="meta-section" style="padding:0 0 10px;">
+        <label>Bot Token (from @BotFather)</label>
+        <input type="text" id="reg-bot-token" placeholder="123456:ABC..." style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.95rem;outline:none;">
+      </div>
+      <div class="meta-section" style="padding:0 0 14px;">
+        <label>Telegram Group ID</label>
+        <input type="text" id="reg-group-id" placeholder="-100123456789" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.95rem;outline:none;">
+        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Create a group, add your bot, then get the ID</p>
+      </div>
+      <button class="sheet-close" style="background:var(--accent);color:white;margin-bottom:8px;" onclick="register()">🚀 Create My Cloud</button>
+      <button class="sheet-close" onclick="showLogin()">← Back to Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- INVITE JOIN SCREEN -->
+<div id="invite-screen" class="screen hidden">
+  <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center;">
+    <div style="font-size:3rem; margin-bottom:20px;">🔗</div>
+    <h1 style="font-size:1.3rem; margin-bottom:8px;">Join Album</h1>
+    <p id="invite-owner" style="color:var(--text-muted); margin-bottom:20px;">Loading...</p>
+    <button class="sheet-close" style="background:var(--success);color:white;" onclick="acceptInvite()">Join Album</button>
+    <button class="sheet-close" style="margin-top:10px;" onclick="showAuth()">← Back</button>
+  </div>
+</div>
+
   <!-- UPLOAD SCREEN -->
 <div id="upload-screen" class="screen">
   <div class="profile-bar" id="profile-bar"></div>
@@ -449,6 +504,200 @@ let state = {
   shareTarget: null
 };
 const STORAGE_KEY = 'telegallery_v1';
+
+
+/* ================= AUTH ================= */
+let currentUser = null;
+let currentInvite = null;
+
+function checkAuth() {
+  const token = localStorage.getItem('tg_token');
+  const invite = new URLSearchParams(location.search).get('invite');
+
+  if (invite) {
+    currentInvite = invite;
+    loadInviteInfo(invite);
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('invite-screen').classList.remove('hidden');
+    return;
+  }
+
+  if (!token) {
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('upload-screen').classList.add('hidden');
+    return;
+  }
+
+  // Verify token
+  fetch(`${API_BASE}/api/auth/me?token=${token}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.id) {
+        currentUser = data;
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('upload-screen').classList.remove('hidden');
+        init();
+      } else {
+        localStorage.removeItem('tg_token');
+        showAuth();
+      }
+    })
+    .catch(() => {
+      showAuth();
+    });
+}
+
+function showAuth() {
+  document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('invite-screen').classList.add('hidden');
+  document.getElementById('upload-screen').classList.add('hidden');
+  document.getElementById('gallery-screen').classList.add('hidden');
+}
+
+function showRegister() {
+  document.getElementById('login-form').classList.add('hidden');
+  document.getElementById('register-form').classList.remove('hidden');
+}
+
+function showLogin() {
+  document.getElementById('register-form').classList.add('hidden');
+  document.getElementById('login-form').classList.remove('hidden');
+}
+
+async function login() {
+  const token = document.getElementById('auth-token').value.trim();
+  if (!token) { toast('Enter your token'); return; }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `token=${encodeURIComponent(token)}`
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      localStorage.setItem('tg_token', token);
+      currentUser = data.user;
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('upload-screen').classList.remove('hidden');
+      init();
+      toast(`Welcome back, ${data.user.name}!`);
+    } else {
+      toast('Invalid token');
+    }
+  } catch (err) {
+    toast('Login failed: ' + err.message);
+  }
+}
+
+async function register() {
+  const name = document.getElementById('reg-name').value.trim();
+  const apiId = document.getElementById('reg-api-id').value.trim();
+  const apiHash = document.getElementById('reg-api-hash').value.trim();
+  const botToken = document.getElementById('reg-bot-token').value.trim();
+  const groupId = document.getElementById('reg-group-id').value.trim();
+
+  if (!name || !apiId || !apiHash || !botToken || !groupId) {
+    toast('Fill all fields'); return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('api_id', apiId);
+    formData.append('api_hash', apiHash);
+    formData.append('bot_token', botToken);
+    formData.append('group_id', groupId);
+
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      localStorage.setItem('tg_token', data.token);
+      document.getElementById('register-form').classList.add('hidden');
+      document.getElementById('login-form').classList.remove('hidden');
+      document.getElementById('auth-token').value = data.token;
+      toast('Account created! Your token is saved.');
+      login();
+    } else {
+      toast(data.detail || 'Registration failed');
+    }
+  } catch (err) {
+    toast('Registration failed: ' + err.message);
+  }
+}
+
+function logout() {
+  localStorage.removeItem('tg_token');
+  currentUser = null;
+  showAuth();
+  toast('Logged out');
+}
+
+/* ================= INVITES ================= */
+async function loadInviteInfo(inviteId) {
+  try {
+    const res = await fetch(`${API_BASE}/api/invites/${inviteId}`);
+    const data = await res.json();
+    document.getElementById('invite-owner').textContent = `Album by ${data.owner_name}`;
+  } catch (err) {
+    document.getElementById('invite-owner').textContent = 'Invalid invite link';
+  }
+}
+
+async function acceptInvite() {
+  if (!currentInvite) return;
+  toast('Joining album...');
+  // In a full implementation, this would add the user to the album
+  // For now, just show the gallery
+  document.getElementById('invite-screen').classList.add('hidden');
+  document.getElementById('upload-screen').classList.remove('hidden');
+}
+
+async function createInvite(albumId) {
+  const token = localStorage.getItem('tg_token');
+  if (!token) { toast('Login first'); return; }
+
+  try {
+    const formData = new FormData();
+    formData.append('token', token);
+    formData.append('album_id', albumId);
+
+    const res = await fetch(`${API_BASE}/api/invites`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+
+    if (data.invite_id) {
+      const fullUrl = `${location.origin}${location.pathname}?invite=${data.invite_id}`;
+      navigator.clipboard.writeText(fullUrl);
+      toast('Invite link copied!');
+      return fullUrl;
+    }
+  } catch (err) {
+    toast('Failed to create invite');
+  }
+}
+
+/* ================= UPDATED API CALLS ================= */
+function getAuthHeaders() {
+  const token = localStorage.getItem('tg_token');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+/* ================= INIT OVERRIDE ================= */
+const originalInit = init;
+init = function() {
+  checkAuth();
+  if (currentUser || localStorage.getItem('tg_token')) {
+    originalInit();
+  }
+};
 
 /* ================= INIT ================= */
 function init() {
