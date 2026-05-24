@@ -1,1769 +1,1564 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#ffffff">
-<title>TeleGallery</title>
-<link rel="manifest" href="manifest.json">
-<style>
-:root {
-  --bg: #f5f7fa; --surface: #ffffff; --surface-hover: #f0f4f8;
-  --border: #e1e8ed; --text: #1a1a2e; --text-muted: #8899a6;
-  --accent: #2b9bf0; --accent-light: #e8f4fd; --accent-glow: rgba(43,155,240,0.15);
-  --danger: #e0245e; --success: #17bf63; --warning: #ffad1f;
-  --radius: 16px; --radius-sm: 10px;
-  --shadow: 0 2px 12px rgba(0,0,0,0.06); --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
-}
-[data-theme="dark"] {
-  --bg: #0a0a14; --surface: #131326; --surface-hover: #1e1e3a;
-  --border: #2a2a45; --text: #e8e8f0; --text-muted: #7a7aaa;
-  --accent: #5b9bd5; --accent-light: rgba(91,155,213,0.15);
-  --shadow: 0 2px 12px rgba(0,0,0,0.3); --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg); color: var(--text);
-  height: 100vh; overflow: hidden;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.3s, color 0.3s;
-}
-.screen { height: 100vh; display: flex; flex-direction: column; animation: fadeIn 0.3s ease; }
-.hidden { display: none !important; }
-@keyframes fadeIn { from {opacity:0; transform:translateY(10px)} to {opacity:1; transform:translateY(0)} }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #252525;
+            --surface3: #333; --text: #fff; --text2: #aaa; --text3: #666;
+            --accent: #6366f1; --accent2: #8b5cf6; --danger: #ef4444;
+            --success: #22c55e; --warning: #f59e0b; --radius: 16px;
+            --radius-sm: 10px; --shadow: 0 4px 24px rgba(0,0,0,0.4);
+        }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .app { max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
+        .hidden { display: none !important; }
 
-.profile-bar {
-  display: flex; align-items: center;
-  padding: 10px 14px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  gap: 10px;
-  flex-shrink: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.profile-bar::-webkit-scrollbar { display: none; }
-.profile-chip {
-  flex-shrink: 0;
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 14px;
-  border-radius: 24px;
-  border: 2px solid var(--border);
-  background: var(--surface);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-.profile-chip:hover { border-color: var(--accent); }
-.profile-chip.active {
-  border-color: var(--accent);
-  background: var(--accent-light);
-  box-shadow: 0 2px 8px var(--accent-glow);
-}
-.profile-chip .p-icon { font-size: 1.3rem; }
-.profile-chip .p-badge {
-  font-size: 0.65rem; padding: 2px 8px; border-radius: 10px;
-  background: var(--bg); color: var(--text-muted); font-weight: 700;
-}
-.profile-chip.active .p-badge { background: var(--accent); color: white; }
-.profile-chip .p-lock { font-size: 0.8rem; opacity: 0.5; }
-.add-profile {
-  flex-shrink: 0;
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  border: 2px dashed var(--border);
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 1.3rem;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-}
-.add-profile:hover { border-color: var(--accent); color: var(--accent); }
+        .loading-screen {
+            position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .loading-screen .logo { font-size: 48px; margin-bottom: 16px; animation: pulse 2s infinite; }
+        .loading-screen h1 { font-weight: 600; font-size: 24px; margin-bottom: 8px; }
+        .loading-screen p { color: var(--text2); font-size: 14px; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-.top-header {
-  display: flex; align-items: center;
-  padding: 12px 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  gap: 10px;
-  flex-shrink: 0;
-}
-.top-header h1 { flex:1; font-size: 1.25rem; font-weight: 800; }
-.header-btn {
-  width: 38px; height: 38px; border-radius: var(--radius-sm);
-  border: none; background: var(--accent-light); color: var(--accent);
-  font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-}
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 0; margin-bottom: 20px;
+        }
+        .header .logo-text { font-size: 24px; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+        .icon-btn {
+            width: 40px; height: 40px; border-radius: 50%; border: none;
+            background: var(--surface2); color: var(--text); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; transition: all 0.2s; position: relative;
+        }
+        .icon-btn:hover { background: var(--surface3); transform: scale(1.05); }
+        .icon-btn .badge {
+            position: absolute; top: -2px; right: -2px; background: var(--danger);
+            color: white; font-size: 10px; width: 18px; height: 18px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: 600;
+        }
 
-.search-bar {
-  padding: 10px 16px; background: var(--surface);
-  border-bottom: 1px solid var(--border); flex-shrink: 0;
-}
-.search-bar input {
-  width: 100%; padding: 11px 16px 11px 40px;
-  border: 1.5px solid var(--border); border-radius: 24px;
-  background: var(--bg); color: var(--text); font-size: 0.95rem; outline: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%238899a6' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: 14px center;
-}
-.search-bar input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .card {
+            background: var(--surface); border-radius: var(--radius);
+            padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow);
+        }
+        .card-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+        .card-subtitle { color: var(--text2); font-size: 14px; margin-bottom: 16px; }
 
-.tags-scroll {
-  display: flex; gap: 10px; padding: 12px 16px;
-  overflow-x: auto; flex-shrink: 0; scrollbar-width: none;
-  background: var(--surface); border-bottom: 1px solid var(--border);
-}
-.tags-scroll::-webkit-scrollbar { display: none; }
-.tag-pill {
-  flex-shrink: 0; padding: 7px 14px; border-radius: 20px;
-  border: 1.5px solid var(--border); background: var(--surface);
-  color: var(--text-muted); font-size: 0.88rem; font-weight: 500;
-  cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
-}
-.tag-pill.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 2px 8px var(--accent-glow); }
-.tag-pill:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
-.tag-pill .count { font-size: 0.72rem; opacity: 0.7; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 10px; }
-.tag-pill.active .count { background: rgba(255,255,255,0.25); }
+        .btn {
+            padding: 12px 24px; border-radius: var(--radius-sm); border: none;
+            font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(99,102,241,0.3); }
+        .btn-secondary { background: var(--surface2); color: var(--text); }
+        .btn-secondary:hover { background: var(--surface3); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--surface3); color: var(--text2); }
+        .btn-sm { padding: 8px 16px; font-size: 13px; }
+        .btn-block { width: 100%; justify-content: center; }
 
-.drop-zone {
-  margin: 16px; padding: 36px 20px;
-  border: 2.5px dashed var(--border); border-radius: var(--radius);
-  background: var(--surface); text-align: center; cursor: pointer;
-  transition: all 0.3s; position: relative;
-}
-.drop-zone.dragover { border-color: var(--accent); background: var(--accent-light); transform: scale(1.01); }
-.drop-zone .dz-icon { font-size: 2.8rem; margin-bottom: 10px; }
-.drop-zone .dz-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
-.drop-zone .dz-sub { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; }
-.drop-zone .dz-formats { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
-.drop-zone .dz-format { font-size: 0.72rem; padding: 3px 8px; background: var(--bg); border-radius: 6px; color: var(--text-muted); font-weight: 500; }
-.drop-zone input { display: none; }
+        .input {
+            width: 100%; padding: 14px 16px; border-radius: var(--radius-sm);
+            border: 1px solid var(--surface3); background: var(--surface2);
+            color: var(--text); font-size: 15px; outline: none; transition: all 0.2s;
+        }
+        .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        .input::placeholder { color: var(--text3); }
+        .input-group { margin-bottom: 16px; }
+        .input-label { display: block; font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-.preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; padding: 0 16px 14px; max-height: 200px; overflow-y: auto; }
-.preview-item { aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden; position: relative; border: 2px solid var(--border); }
-.preview-item img { width: 100%; height: 100%; object-fit: cover; }
-.preview-item .remove { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; background: var(--danger); color: white; border-radius: 50%; border: none; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-card { width: 100%; max-width: 400px; text-align: center; }
+        .auth-card .logo { font-size: 64px; margin-bottom: 16px; }
+        .auth-card h2 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        .auth-card p { color: var(--text2); margin-bottom: 32px; }
+        .auth-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+        .auth-tab { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: none; background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 14px; font-weight: 500; }
+        .auth-tab.active { background: var(--accent); color: white; }
 
-.meta-section { padding: 0 16px 12px; }
-.meta-section label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 5px; }
-.meta-section textarea, .meta-section input[type="text"] { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-size: 0.93rem; outline: none; font-family: inherit; }
-.meta-section textarea { resize: vertical; min-height: 70px; }
-.meta-section input[type="text"]:focus, .meta-section textarea:focus { border-color: var(--accent); }
+        .albums-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+        .album-card {
+            background: var(--surface); border-radius: var(--radius); overflow: hidden;
+            cursor: pointer; transition: all 0.3s; position: relative;
+        }
+        .album-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        .album-thumb {
+            width: 100%; aspect-ratio: 1; background: linear-gradient(135deg, var(--surface2), var(--surface3));
+            display: flex; align-items: center; justify-content: center; font-size: 48px;
+        }
+        .album-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .album-info { padding: 12px; }
+        .album-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .album-count { font-size: 12px; color: var(--text2); margin-top: 2px; }
+        .album-lock {
+            position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6);
+            width: 28px; height: 28px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: 14px;
+        }
+        .album-new-btn {
+            background: var(--surface2); border: 2px dashed var(--surface3);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            aspect-ratio: 1; border-radius: var(--radius); cursor: pointer; transition: all 0.2s;
+        }
+        .album-new-btn:hover { border-color: var(--accent); background: rgba(99,102,241,0.05); }
+        .album-new-btn span { font-size: 32px; margin-bottom: 8px; }
+        .album-new-btn p { font-size: 14px; color: var(--text2); }
 
-.progress-wrap { padding: 0 16px 12px; }
-.progress-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.4s ease; border-radius: 3px; }
-.progress-text { text-align: center; font-size: 0.82rem; color: var(--text-muted); margin-top: 7px; }
+        .photos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        @media (min-width: 768px) { .photos-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; } }
+        .photo-item {
+            aspect-ratio: 1; background: var(--surface2); border-radius: 8px;
+            overflow: hidden; cursor: pointer; position: relative; transition: all 0.2s;
+        }
+        .photo-item:hover { transform: scale(1.02); }
+        .photo-item img, .photo-item video {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .photo-item .video-badge {
+            position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.7);
+            color: white; font-size: 11px; padding: 2px 6px; border-radius: 4px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .photo-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0);
+            display: flex; align-items: flex-end; justify-content: space-between;
+            padding: 8px; opacity: 0; transition: all 0.2s;
+        }
+        .photo-item:hover .photo-overlay { opacity: 1; background: rgba(0,0,0,0.3); }
+        .photo-actions { display: flex; gap: 4px; }
+        .photo-action-btn {
+            width: 32px; height: 32px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.6); color: white; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
+            backdrop-filter: blur(4px);
+        }
+        .photo-action-btn:hover { background: rgba(0,0,0,0.8); }
+        .photo-action-btn.liked { background: var(--danger); }
 
-.upload-action { padding: 0 16px 14px; }
-.upload-action button { width: 100%; padding: 14px; border-radius: var(--radius-sm); border: none; background: var(--accent); color: white; font-size: 0.98rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px var(--accent-glow); }
-.upload-action button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .lightbox {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .lightbox-close {
+            position: absolute; top: 16px; right: 16px; width: 44px; height: 44px;
+            border-radius: 50%; border: none; background: rgba(255,255,255,0.1);
+            color: white; font-size: 24px; cursor: pointer; z-index: 1001;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .lightbox-media {
+            max-width: 90vw; max-height: 70vh; object-fit: contain;
+            border-radius: 8px;
+        }
+        .lightbox-info {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            padding: 40px 20px 20px;
+        }
+        .lightbox-caption { font-size: 16px; margin-bottom: 12px; }
+        .lightbox-meta { display: flex; gap: 16px; align-items: center; color: var(--text2); font-size: 14px; }
+        .lightbox-nav {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 48px; height: 48px; border-radius: 50%; border: none;
+            background: rgba(255,255,255,0.1); color: white; font-size: 20px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .lightbox-nav:hover { background: rgba(255,255,255,0.2); }
+        .lightbox-prev { left: 16px; }
+        .lightbox-next { right: 16px; }
 
-.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; padding: 16px; overflow-y: auto; flex: 1; }
-@media(min-width:768px){ .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; } }
+        .comments-section {
+            max-height: 200px; overflow-y: auto; margin-top: 12px;
+        }
+        .comment-item {
+            display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start;
+        }
+        .comment-avatar {
+            width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; flex-shrink: 0;
+        }
+        .comment-body { flex: 1; }
+        .comment-author { font-weight: 600; font-size: 13px; }
+        .comment-text { font-size: 14px; color: var(--text2); margin-top: 2px; }
+        .comment-time { font-size: 11px; color: var(--text3); margin-top: 2px; }
+        .comment-input-row { display: flex; gap: 8px; margin-top: 12px; }
+        .comment-input-row input { flex: 1; }
 
-.photo-card { aspect-ratio: 1; background: var(--surface); border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; position: relative; transition: all 0.25s cubic-bezier(0.4,0,0.2,1); border: 2px solid transparent; box-shadow: var(--shadow); }
-.photo-card:hover { transform: translateY(-3px) scale(1.02); border-color: var(--accent); box-shadow: var(--shadow-lg); }
-.photo-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-.photo-card:hover img { transform: scale(1.08); }
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+            backdrop-filter: blur(8px);
+        }
+        .modal {
+            background: var(--surface); border-radius: var(--radius); width: 100%; max-width: 420px;
+            max-height: 90vh; overflow-y: auto; animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .modal-header { padding: 20px 20px 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 20px; font-weight: 600; }
+        .modal-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 18px; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 0 20px 20px; display: flex; gap: 8px; }
+        .modal-footer .btn { flex: 1; }
 
-.photo-card .star { position: absolute; top: 7px; right: 7px; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,0.35); backdrop-filter: blur(4px); border: none; color: white; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
-.photo-card:hover .star { opacity: 1; }
-.photo-card .star.faved { opacity: 1; color: var(--warning); background: rgba(0,0,0,0.55); }
+        .qr-container { display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .qr-container canvas { border-radius: var(--radius-sm); margin-bottom: 12px; }
+        .qr-url { font-size: 12px; color: var(--text3); word-break: break-all; text-align: center; }
 
-.photo-card .select-ring { position: absolute; top: 7px; left: 7px; width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.8); background: rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: white; opacity: 0; transition: opacity 0.2s; }
-.photo-card:hover .select-ring { opacity: 1; }
-.photo-card.selected .select-ring { opacity: 1; background: var(--accent); border-color: var(--accent); }
-.photo-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+        .stat-card {
+            background: var(--surface2); border-radius: var(--radius-sm); padding: 16px;
+            text-align: center;
+        }
+        .stat-value { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { font-size: 12px; color: var(--text2); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stats-albums { display: flex; flex-direction: column; gap: 8px; }
+        .stats-album-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px; background: var(--surface2); border-radius: var(--radius-sm);
+        }
+        .stats-album-name { font-weight: 500; }
+        .stats-album-detail { font-size: 12px; color: var(--text2); }
 
-.photo-card .info-bar { position: absolute; bottom: 0; left: 0; right: 0; padding: 22px 8px 8px; background: linear-gradient(transparent, rgba(0,0,0,0.6)); color: white; font-size: 0.78rem; display: flex; justify-content: space-between; align-items: center; }
-.photo-card .share-badge { position: absolute; top: 7px; left: 50%; transform: translateX(-50%); padding: 3px 10px; background: var(--success); color: white; font-size: 0.65rem; font-weight: 700; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .timeline-date {
+            font-size: 18px; font-weight: 700; margin: 24px 0 12px;
+            padding-bottom: 8px; border-bottom: 1px solid var(--surface2);
+        }
+        .timeline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+        @media (min-width: 768px) { .timeline-grid { grid-template-columns: repeat(6, 1fr); gap: 8px; } }
 
-.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; color: var(--text-muted); }
-.empty-state .es-icon { font-size: 3.5rem; margin-bottom: 14px; opacity: 0.4; }
-.empty-state .es-title { font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-.empty-state .es-sub { font-size: 0.9rem; max-width: 260px; line-height: 1.5; }
+        .trash-empty { text-align: center; padding: 40px; color: var(--text2); }
+        .trash-empty span { font-size: 48px; display: block; margin-bottom: 12px; }
+        .trash-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px;
+            background: var(--surface2); border-radius: var(--radius-sm); margin-bottom: 8px;
+        }
+        .trash-item-thumb { width: 60px; height: 60px; border-radius: 8px; background: var(--surface3); object-fit: cover; }
+        .trash-item-info { flex: 1; }
+        .trash-item-name { font-weight: 500; font-size: 14px; }
+        .trash-item-meta { font-size: 12px; color: var(--text2); }
 
-.viewer { position: fixed; inset: 0; background: rgba(0,0,0,0.94); z-index: 200; display: flex; flex-direction: column; animation: fadeIn 0.2s; touch-action: pan-y; }
-.viewer-toolbar { display: flex; align-items: center; padding: 10px 14px; gap: 10px; }
-.viewer-toolbar button { width: 38px; height: 38px; border-radius: 50%; border: none; background: rgba(255,255,255,0.1); color: white; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.viewer-toolbar .v-title { flex: 1; color: white; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
-.viewer-img-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 8px; position: relative; }
-.viewer-img-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px; max-height: 72vh; }
-.viewer-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(255,255,255,0.12); color: white; font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-.viewer-nav.prev { left: 8px; } .viewer-nav.next { right: 8px; }
-.viewer-caption { padding: 12px 18px 6px; color: rgba(255,255,255,0.85); text-align: center; font-size: 0.95rem; }
-.viewer-details { display: flex; gap: 18px; justify-content: center; padding-bottom: 18px; color: rgba(255,255,255,0.45); font-size: 0.78rem; }
+        .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 240px; margin: 0 auto; }
+        .pin-key {
+            aspect-ratio: 1; border-radius: 50%; border: none; background: var(--surface2);
+            color: var(--text); font-size: 24px; font-weight: 500; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+        }
+        .pin-key:hover { background: var(--surface3); }
+        .pin-key:active { transform: scale(0.95); }
+        .pin-display {
+            display: flex; gap: 12px; justify-content: center; margin-bottom: 24px;
+        }
+        .pin-dot {
+            width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--surface3);
+            transition: all 0.2s;
+        }
+        .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
 
-.bottom-nav { display: flex; background: var(--surface); border-top: 1px solid var(--border); padding: 6px 0 calc(6px + env(safe-area-inset-bottom)); flex-shrink: 0; }
-.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px; border: none; background: none; color: var(--text-muted); font-size: 0.72rem; font-weight: 600; cursor: pointer; }
-.nav-item .nav-icon { font-size: 1.4rem; }
-.nav-item.active { color: var(--accent); }
+        .notif-panel {
+            position: fixed; top: 60px; right: 20px; width: 320px; max-height: 400px;
+            background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+            z-index: 500; overflow-y: auto; padding: 12px;
+        }
+        .notif-item {
+            padding: 10px 12px; border-radius: var(--radius-sm); margin-bottom: 6px;
+            background: var(--surface2); font-size: 13px; cursor: pointer; transition: all 0.2s;
+        }
+        .notif-item:hover { background: var(--surface3); }
+        .notif-item.unread { border-left: 3px solid var(--accent); }
+        .notif-time { font-size: 11px; color: var(--text3); margin-top: 4px; }
 
-.bulk-bar { position: fixed; bottom: 66px; left: 14px; right: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-lg); z-index: 50; animation: slideUp 0.3s ease; }
-.bulk-bar .bulk-count { flex: 1; font-weight: 700; font-size: 0.95rem; }
-.bulk-bar button { width: auto; padding: 8px 14px; border-radius: var(--radius-sm); font-size: 0.85rem; border: none; cursor: pointer; }
-.bulk-bar .secondary { background: var(--surface-hover); color: var(--text); }
-.bulk-bar .bulk-danger { background: var(--danger); color: white; }
-.bulk-bar .bulk-share { background: var(--success); color: white; }
-.bulk-bar .bulk-move { background: var(--accent); color: white; }
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); display: flex; align-items: flex-end; justify-content: center; z-index: 100; }
-.modal-sheet { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; padding: 22px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; animation: sheetUp 0.35s cubic-bezier(0.4,0,0.2,1); }
-@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-.modal-sheet h3 { font-size: 1.2rem; margin-bottom: 6px; }
-.modal-sheet .sheet-sub { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px; }
-.sheet-option { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.2s; }
-.sheet-option:hover { background: var(--surface-hover); }
-.sheet-option .so-icon { font-size: 1.6rem; width: 40px; text-align: center; }
-.sheet-option .so-text { flex: 1; }
-.sheet-option .so-title { font-weight: 700; font-size: 0.98rem; }
-.sheet-option .so-desc { color: var(--text-muted); font-size: 0.82rem; margin-top: 2px; }
-.sheet-divider { height: 1px; background: var(--border); margin: 8px 0; }
-.sheet-close { width: 100%; padding: 12px; margin-top: 10px; border-radius: var(--radius-sm); border: none; background: var(--surface-hover); color: var(--text); font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+        .toast-container {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            z-index: 3000; display: flex; flex-direction: column; gap: 8px;
+        }
+        .toast {
+            background: var(--surface); color: var(--text); padding: 12px 20px;
+            border-radius: var(--radius-sm); box-shadow: var(--shadow);
+            font-size: 14px; animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 8px;
+            border: 1px solid var(--surface3);
+        }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
 
-.toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 11px 22px; border-radius: 24px; z-index: 300; font-size: 0.88rem; font-weight: 600; box-shadow: var(--shadow-lg); animation: toastIn 0.3s ease; white-space: nowrap; }
-@keyframes toastIn { from { transform: translateX(-50%) translateY(20px); opacity:0 } to { transform: translateX(-50%) translateY(0); opacity:1 } }
+        .upload-zone {
+            border: 2px dashed var(--surface3); border-radius: var(--radius);
+            padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+        .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(99,102,241,0.05); }
+        .upload-zone span { font-size: 40px; display: block; margin-bottom: 8px; }
+        .upload-preview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+        .upload-preview { aspect-ratio: 1; border-radius: 8px; object-fit: cover; }
 
-.member-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
-.member-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; }
-.member-name { flex: 1; font-size: 0.95rem; }
-.member-role { font-size: 0.78rem; color: var(--text-muted); background: var(--bg); padding: 3px 10px; border-radius: 10px; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface2); padding: 4px; border-radius: var(--radius-sm); }
+        .tab { flex: 1; padding: 10px; border-radius: 8px; border: none; background: transparent; color: var(--text2); cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .tab.active { background: var(--surface3); color: var(--text); }
 
-.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
-.toggle-row .t-label { font-size: 0.95rem; }
-.toggle-row .t-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
-.toggle-switch { width: 48px; height: 28px; border-radius: 14px; background: var(--border); position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
-.toggle-switch.on { background: var(--accent); }
-.toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: white; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-.toggle-switch.on::after { transform: translateX(20px); }
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface);
+            border-top: 1px solid var(--surface2); display: flex; justify-content: space-around;
+            padding: 8px 0; z-index: 100; backdrop-filter: blur(20px);
+        }
+        .bottom-nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 4px 16px; border: none; background: none; color: var(--text2);
+            cursor: pointer; font-size: 11px; transition: all 0.2s;
+        }
+        .bottom-nav-item.active { color: var(--accent); }
+        .bottom-nav-item span { font-size: 22px; }
 
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-</style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+        .empty-state span { font-size: 64px; display: block; margin-bottom: 16px; opacity: 0.5; }
+        .empty-state h3 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+
+        .video-player {
+            width: 100%; max-height: 70vh; border-radius: 8px;
+        }
+
+        .progress-bar {
+            width: 100%; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden;
+        }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.3s; }
+    </style>
 <base target="_blank">
 </head>
 <body>
-  <!-- UPLOAD SCREEN -->
-<div id="upload-screen" class="screen">
-  <div class="profile-bar" id="profile-bar"></div>
-  <div class="top-header">
-    <h1 id="upload-header-title">📤 Upload</h1>
-    <button class="header-btn" onclick="toggleTheme()">🌓</button>
-    <button class="header-btn" onclick="showProfileSettings()">⚙️</button>
-  </div>
-  <div class="tags-scroll" id="upload-tags"></div>
-  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-    <div class="dz-icon">🖼️</div>
-    <div class="dz-title">Drop photos here</div>
-    <div class="dz-sub">or tap to browse</div>
-    <div class="dz-formats"><span class="dz-format">JPG</span><span class="dz-format">PNG</span><span class="dz-format">HEIC</span><span class="dz-format">MP4</span></div>
-    <input type="file" id="file-input" accept="image/*,video/*" multiple onchange="handleFiles(this.files)">
-  </div>
-  <div class="preview-grid hidden" id="preview-grid"></div>
-  <div class="meta-section">
-    <label>Caption</label>
-    <textarea id="caption-input" placeholder="Add a note..."></textarea>
-  </div>
-  <div class="progress-wrap hidden" id="progress-wrap">
-    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-    <div class="progress-text" id="progress-text">Uploading...</div>
-  </div>
-  <div class="upload-action">
-    <button id="upload-btn" onclick="uploadToBackend()"><span>📤</span> Upload to Telegram</button>
-  </div>
-  <div class="bottom-nav">
-    <button class="nav-item active" onclick="switchTab('upload')"><span class="nav-icon">📤</span><span>Upload</span></button>
-    <button class="nav-item" onclick="switchTab('gallery')"><span class="nav-icon">🖼️</span><span>Gallery</span></button>
-  </div>
-</div>
-
-<!-- PIN SCREEN -->
-<div id="pin-screen" class="screen hidden">
-  <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center;">
-    <div style="font-size:2.5rem; margin-bottom:15px;">🔐</div>
-    <h1 style="font-size:1.3rem; margin-bottom:8px;">Enter PIN</h1>
-    <p style="color:var(--text-muted); margin-bottom:25px;">Secure your album</p>
-    <div style="display:flex; gap:10px; margin-bottom:20px;" id="pin-dots">
-      <div style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border); transition:all 0.2s;" id="pin-1"></div>
-      <div style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border); transition:all 0.2s;" id="pin-2"></div>
-      <div style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border); transition:all 0.2s;" id="pin-3"></div>
-      <div style="width:14px; height:14px; border-radius:50%; border:2px solid var(--border); transition:all 0.2s;" id="pin-4"></div>
+    <div id="loading" class="loading-screen">
+        <div class="logo">📸</div>
+        <h1>Telegallery</h1>
+        <p>Loading your memories...</p>
     </div>
-    <div style="display:grid; grid-template-columns: repeat(3, 70px); gap:12px;">
-      <button type="button" class="pin-btn" onclick="enterPin(1)">1</button>
-      <button type="button" class="pin-btn" onclick="enterPin(2)">2</button>
-      <button type="button" class="pin-btn" onclick="enterPin(3)">3</button>
-      <button type="button" class="pin-btn" onclick="enterPin(4)">4</button>
-      <button type="button" class="pin-btn" onclick="enterPin(5)">5</button>
-      <button type="button" class="pin-btn" onclick="enterPin(6)">6</button>
-      <button type="button" class="pin-btn" onclick="enterPin(7)">7</button>
-      <button type="button" class="pin-btn" onclick="enterPin(8)">8</button>
-      <button type="button" class="pin-btn" onclick="enterPin(9)">9</button>
-      <button type="button" class="pin-btn" style="visibility:hidden;">.</button>
-      <button type="button" class="pin-btn" onclick="enterPin(0)">0</button>
-      <button type="button" class="pin-btn" onclick="backspacePin()">⌫</button>
-    </div>
-    <button type="button" class="sheet-close" style="margin-top:20px; background:var(--surface-hover);" onclick="forgotPin()">Forgot PIN</button>
-  </div>
-  <style>
-    .pin-btn { width:70px; height:70px; border-radius:50%; border:none; background:var(--surface); color:var(--text); font-size:1.3rem; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:all 0.15s; }
-    .pin-btn:active { transform:scale(0.92); background:var(--accent-light); }
-  </style>
-</div>
 
-<!-- GALLERY SCREEN -->
-<div id="gallery-screen" class="screen hidden">
-  <div class="profile-bar" id="gallery-profile-bar"></div>
-  <div class="top-header">
-    <h1 id="gallery-header-title">🖼️ Gallery</h1>
-    <button class="header-btn" onclick="toggleSelectMode()">☑️</button>
-    <button class="header-btn" onclick="toggleTheme()">🌓</button>
-  </div>
-  <div class="search-bar">
-    <input type="text" id="gallery-search" placeholder="Search photos & albums..." oninput="doSearch()">
-  </div>
-  <div class="tags-scroll" id="gallery-tags"></div>
-  <div class="gallery-grid" id="gallery-grid"></div>
-  <div class="empty-state hidden" id="empty-state">
-    <div class="es-icon">🖼️</div>
-    <div class="es-title">No photos yet</div>
-    <div class="es-sub">Switch to Upload to add your first photos to this album.</div>
-  </div>
-  <div class="bottom-nav">
-    <button class="nav-item" onclick="switchTab('upload')"><span class="nav-icon">📤</span><span>Upload</span></button>
-    <button class="nav-item active" onclick="switchTab('gallery')"><span class="nav-icon">🖼️</span><span>Gallery</span></button>
-  </div>
-</div>
-
-<!-- VIEWER OVERLAY -->
-<div id="viewer" class="viewer hidden">
-  <div class="viewer-toolbar">
-    <button onclick="closeViewer()">✕</button>
-    <div class="v-title" id="v-title">Photo</div>
-    <button onclick="toggleFavViewer()" id="v-star-btn">☆</button>
-    <button onclick="showShareSheetFromViewer()">🔗</button>
-    <button onclick="downloadCurrent()">⬇️</button>
-  </div>
-  <div class="viewer-img-wrap" id="viewer-img-wrap">
-    <img id="viewer-img" src="" alt="">
-    <button class="viewer-nav prev" onclick="viewerPrev()">‹</button>
-    <button class="viewer-nav next" onclick="viewerNext()">›</button>
-  </div>
-  <div class="viewer-caption" id="viewer-caption"></div>
-  <div class="viewer-details" id="viewer-details"></div>
-</div>
-
-<!-- BULK BAR -->
-<div id="bulk-bar" class="bulk-bar hidden">
-  <span class="bulk-count" id="bulk-count">0 selected</span>
-  <button class="secondary" onclick="clearSelection()">Cancel</button>
-  <button class="bulk-move" onclick="bulkMove()">Move</button>
-  <button class="bulk-share" onclick="bulkShare()">Share</button>
-  <button class="bulk-danger" onclick="bulkDelete()">Delete</button>
-</div>
-
-<!-- SHARE SHEET MODAL -->
-<div id="share-modal" class="modal hidden" onclick="closeShareSheet(event)">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>Share</h3>
-    <div class="sheet-sub">Choose how to share this photo</div>
-    <div class="sheet-option" onclick="shareCopyLink()">
-      <div class="so-icon">🔗</div>
-      <div class="so-text"><div class="so-title">Copy Link</div><div class="so-desc">Copy a shareable URL to clipboard</div></div>
-    </div>
-    <div class="sheet-option" onclick="shareNative()">
-      <div class="so-icon">📲</div>
-      <div class="so-text"><div class="so-title">Native Share</div><div class="so-desc">Use your device's share menu</div></div>
-    </div>
-    <div class="sheet-option" onclick="shareTelegram()">
-      <div class="so-icon">✈️</div>
-      <div class="so-text"><div class="so-title">Telegram</div><div class="so-desc">Send via Telegram app or bot</div></div>
-    </div>
-    <div class="sheet-option" onclick="shareDownload()">
-      <div class="so-icon">⬇️</div>
-      <div class="so-text"><div class="so-title">Download</div><div class="so-desc">Save to your device</div></div>
-    </div>
-    <div class="sheet-divider"></div>
-    <button class="sheet-close" onclick="hideModal('share-modal')">Cancel</button>
-  </div>
-</div>
-
-<!-- MOVE MODAL -->
-<div id="move-modal" class="modal hidden" onclick="hideMoveModal(event)">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>Move to Album</h3>
-    <div class="sheet-sub">Select destination album</div>
-    <div id="move-profile-list"></div>
-    <button class="sheet-close" onclick="hideModal('move-modal')">Cancel</button>
-  </div>
-</div>
-
-<!-- INVITE MODAL -->
-<div id="invite-modal" class="modal hidden" onclick="hideInviteModal(event)">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>Invite Members</h3>
-    <div class="sheet-sub">Share this link to invite people to this album</div>
-    <div class="meta-section" style="padding:0 0 14px;">
-      <label>Invite Link</label>
-      <input type="text" id="invite-link" readonly onclick="this.select()" style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.9rem;outline:none;">
-    </div>
-    <div class="sheet-option" onclick="copyInviteLink()">
-      <div class="so-icon">📋</div>
-      <div class="so-text"><div class="so-title">Copy Link</div><div class="so-desc">Copy to clipboard</div></div>
-    </div>
-    <div class="sheet-option" onclick="shareInviteNative()">
-      <div class="so-icon">📲</div>
-      <div class="so-text"><div class="so-title">Share Link</div><div class="so-desc">Send via your apps</div></div>
-    </div>
-    <button class="sheet-close" onclick="hideModal('invite-modal')">Close</button>
-  </div>
-</div>
-
-<!-- PROFILE SETTINGS MODAL -->
-<div id="profile-modal" class="modal hidden" onclick="closeProfileSettings(event)">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>Album Settings</h3>
-    <div class="sheet-sub">Manage your gallery albums</div>
-    <div id="profile-list"></div>
-    <div class="sheet-divider"></div>
-    <div class="sheet-option" onclick="showAddProfile()">
-      <div class="so-icon">➕</div>
-      <div class="so-text"><div class="so-title">New Album</div><div class="so-desc">Create a new photo album</div></div>
-    </div>
-    <div class="sheet-divider"></div>
-    <div class="sheet-option" onclick="showInviteModal()">
-      <div class="so-icon">👥</div>
-      <div class="so-text"><div class="so-title">Invite Members</div><div class="so-desc">Get a shareable invite link</div></div>
-    </div>
-    <div class="sheet-option" onclick="disconnectProfile()">
-      <div class="so-icon">🔌</div>
-      <div class="so-text"><div class="so-title">Disconnect Album</div><div class="so-desc">Clear all data for this album</div></div>
-    </div>
-    <button class="sheet-close" onclick="hideModal('profile-modal')">Done</button>
-  </div>
-</div>
-
-<!-- ADD PROFILE MODAL -->
-<div id="add-profile-modal" class="modal hidden" onclick="hideAddProfile(event)">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>New Album</h3>
-    <div class="sheet-sub">Create a new gallery album</div>
-    <div class="meta-section" style="padding:0 0 14px;">
-      <label>Album Name</label>
-      <input type="text" id="new-profile-name" placeholder="e.g. Summer Trip">
-    </div>
-    <button class="sheet-close" style="background:var(--accent);color:white;" onclick="createProfile()">Create Album</button>
-    <button class="sheet-close" onclick="hideModal('add-profile-modal')">Cancel</button>
-  </div>
-</div>
-
-<!-- TOAST CONTAINER -->
-<div id="toast-container"></div>
-
-<script>
-/* ================= API CONFIG ================= */
-const API_BASE = "https://opulent-memory-j47649g65g2ppv4-8000.app.github.dev";
-
-/* ================= STATE ================= */
-let state = {
-  profiles: [],
-  activeProfile: null,
-  photos: [],
-  tags: ['All','Favorites','Photos','Videos','Screenshots','Memes','Nature','Food','Travel','Selfies'],
-  activeTag: 'All',
-  theme: 'light',
-  selectMode: false,
-  selected: new Set(),
-  viewerIndex: 0,
-  pendingFiles: [],
-  shareTarget: null
-};
-const STORAGE_KEY = 'telegallery_v1';
-
-/* ================= INIT ================= */
-function init() {
-  loadState();
-  if (!state.profiles.length) {
-    state.profiles = [
-      { id: 'default', name: 'Personal', icon: '🔒', locked: false, members: ['You'] },
-      { id: 'family', name: 'Family', icon: '👨‍👩‍👧', locked: false, members: ['You'] },
-      { id: 'work', name: 'Work', icon: '💼', locked: false, members: ['You'] }
-    ];
-    state.activeProfile = 'default';
-  }
-  if (!state.photos) state.photos = [];
-  applyTheme();
-  renderProfiles();
-  renderTags();
-  renderGallery();
-  setupDragDrop();
-  setupViewerSwipe();
-  fetchAlbums();
-}
-
-/* ================= STORAGE ================= */
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      Object.assign(state, parsed);
-      state.selected = new Set();
-    }
-  } catch(e) {}
-}
-function saveState() {
-  const toSave = { ...state, selected: [] };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-}
-
-/* ================= THEME ================= */
-function toggleTheme() {
-  state.theme = state.theme === 'light' ? 'dark' : 'light';
-  applyTheme();
-  saveState();
-}
-function applyTheme() {
-  document.documentElement.setAttribute('data-theme', state.theme);
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', state.theme === 'dark' ? '#0a0a14' : '#ffffff');
-}
-
-/* ================= PROFILES ================= */
-function renderProfiles() {
-  const bars = ['profile-bar','gallery-profile-bar'];
-  bars.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML = '';
-    state.profiles.forEach(p => {
-      const chip = document.createElement('div');
-      chip.className = 'profile-chip' + (p.id === state.activeProfile ? ' active' : '');
-      chip.innerHTML = `<span class="p-icon">${p.icon}</span><span>${p.name}</span><span class="p-badge">${countPhotos(p.id)}</span>${p.locked?'<span class="p-lock">🔒</span>':''}`;
-      chip.onclick = () => switchProfile(p.id);
-      el.appendChild(chip);
-    });
-    const add = document.createElement('div');
-    add.className = 'add-profile';
-    add.innerHTML = '+';
-    add.onclick = showAddProfile;
-    el.appendChild(add);
-  });
-  const p = state.profiles.find(x=>x.id===state.activeProfile);
-  document.getElementById('upload-header-title').textContent = p ? `📤 Upload to ${p.name}` : '📤 Upload';
-  document.getElementById('gallery-header-title').textContent = p ? `🖼️ ${p.name}` : '🖼️ Gallery';
-}
-function switchProfile(id) {
-  state.activeProfile = id;
-  state.activeTag = 'All';
-  state.selected.clear();
-  state.selectMode = false;
-  renderProfiles();
-  renderTags();
-  renderGallery();
-  updateBulkBar();
-}
-function countPhotos(profileId) {
-  return state.photos.filter(ph => ph.profile === profileId).length;
-}
-  function showProfileSettings() {
-  const list = document.getElementById('profile-list');
-  list.innerHTML = '';
-  state.profiles.forEach(p => {
-    const isActive = p.id === state.activeProfile;
-    const row = document.createElement('div');
-    row.style.cssText = 'padding:10px 0;border-bottom:1px solid var(--border);';
-    row.innerHTML = `
-      <div class="member-row">
-        <div class="member-avatar">${p.icon}</div>
-        <div class="member-name">${p.name} ${isActive?'<span style="font-size:0.75rem;color:var(--accent);">● active</span>':''}</div>
-        <button class="header-btn" style="width:32px;height:32px;" onclick="deleteProfile('${p.id}')">🗑️</button>
-      </div>
-      <div style="padding-left:46px;">
-        <div class="toggle-row" style="padding:6px 0;" onclick="toggleProfileLock('${p.id}')">
-          <div>
-            <div class="t-label" style="font-size:0.85rem;">Privacy Lock</div>
-            <div class="t-desc" style="font-size:0.75rem;">Require confirmation to open</div>
-          </div>
-          <div class="toggle-switch ${p.locked?'on':''}" id="lock-${p.id}"></div>
-        </div>
-        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">
-          👤 ${(p.members||['You']).join(', ')}
-        </div>
-      </div>
-    `;
-    list.appendChild(row);
-  });
-  showModal('profile-modal');
-}
-function toggleProfileLock(id) {
-  const p = state.profiles.find(x=>x.id===id);
-  if (!p) return;
-  p.locked = !p.locked;
-  saveState();
-  const sw = document.getElementById('lock-'+id);
-  if (sw) sw.classList.toggle('on', p.locked);
-  renderProfiles();
-}
-function closeProfileSettings(e) { if(e.target===e.currentTarget) hideModal('profile-modal'); }
-function deleteProfile(id) {
-  if (state.profiles.length <= 1) { toast('Need at least one album'); return; }
-  if (!confirm('Delete this album and all its photos?')) return;
-  state.profiles = state.profiles.filter(p => p.id !== id);
-  state.photos = state.photos.filter(p => p.profile !== id);
-  if (state.activeProfile === id) state.activeProfile = state.profiles[0].id;
-  saveState();
-  renderProfiles();
-  renderGallery();
-  showProfileSettings({target:document.getElementById('profile-modal'),currentTarget:document.getElementById('profile-modal')});
-}
-function disconnectProfile() {
-  const p = state.profiles.find(x=>x.id===state.activeProfile);
-  if (!p) return;
-  if (!confirm(`Disconnect "${p.name}"? This will delete all ${countPhotos(p.id)} photos in this album.`)) return;
-  state.photos = state.photos.filter(ph => ph.profile !== state.activeProfile);
-  saveState();
-  renderTags();
-  renderGallery();
-  hideModal('profile-modal');
-  toast('Album disconnected');
-}
-function showAddProfile() { document.getElementById('new-profile-name').value=''; showModal('add-profile-modal'); }
-function hideAddProfile(e) { if(e.target===e.currentTarget) hideModal('add-profile-modal'); }
-function createProfile() {
-  const name = document.getElementById('new-profile-name').value.trim();
-  if (!name) { toast('Enter a name'); return; }
-  const id = 'p_' + Date.now();
-  const icons = ['🏠','💼','🎉','🏖️','🍕','📸','🎮','🎵','❤️','🌟'];
-  state.profiles.push({ id, name, icon: icons[state.profiles.length % icons.length], locked: false, members: ['You'] });
-  state.activeProfile = id;
-  saveState();
-  hideModal('add-profile-modal');
-  renderProfiles();
-  renderGallery();
-  toast('Album created');
-}
-
-/* ================= INVITE ================= */
-function showInviteModal() {
-  const p = state.profiles.find(x=>x.id===state.activeProfile);
-  const link = location.origin + location.pathname + '?join=' + encodeURIComponent(state.activeProfile) + '&name=' + encodeURIComponent(p?p.name:'Album');
-  document.getElementById('invite-link').value = link;
-  showModal('invite-modal');
-}
-function hideInviteModal(e) { if(e.target===e.currentTarget) hideModal('invite-modal'); }
-function copyInviteLink() {
-  const el = document.getElementById('invite-link');
-  el.select();
-  navigator.clipboard.writeText(el.value).then(()=>toast('Invite link copied'));
-}
-function shareInviteNative() {
-  const el = document.getElementById('invite-link');
-  const p = state.profiles.find(x=>x.id===state.activeProfile);
-  if (navigator.share) {
-    navigator.share({ title: 'Join my ' + (p?p.name:'TeleGallery') + ' album', url: el.value }).catch(()=>{});
-  } else {
-    toast('Native share not available');
-  }
-}
-
-/* ================= TAGS ================= */
-function renderTags() {
-  const ids = ['upload-tags','gallery-tags'];
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML = '';
-    state.tags.forEach(tag => {
-      const count = tag === 'All' ? countPhotos(state.activeProfile) :
-        tag === 'Favorites' ? state.photos.filter(p=>p.profile===state.activeProfile&&p.fav).length :
-        state.photos.filter(p=>p.profile===state.activeProfile&&p.tags&&p.tags.includes(tag)).length;
-      const pill = document.createElement('div');
-      pill.className = 'tag-pill' + (state.activeTag === tag ? ' active' : '');
-      pill.innerHTML = `${tag}<span class="count">${count}</span>`;
-      pill.onclick = () => { state.activeTag = tag; renderTags(); renderGallery(); };
-      el.appendChild(pill);
-    });
-  });
-}
-
-/* ================= UPLOAD ================= */
-function setupDragDrop() {
-  const dz = document.getElementById('drop-zone');
-  ['dragenter','dragover','dragleave','drop'].forEach(evt => {
-    dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); });
-  });
-  dz.addEventListener('dragenter', () => dz.classList.add('dragover'));
-  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
-  dz.addEventListener('drop', e => {
-    dz.classList.remove('dragover');
-    handleFiles(e.dataTransfer.files);
-  });
-}
-function handleFiles(files) {
-  if (!files.length) return;
-  Array.from(files).forEach(file => {
-    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      state.pendingFiles.push({ name: file.name, data: e.target.result, type: file.type });
-      renderPreviews();
-    };
-    reader.readAsDataURL(file);
-  });
-}
-function renderPreviews() {
-  const grid = document.getElementById('preview-grid');
-  grid.classList.toggle('hidden', !state.pendingFiles.length);
-  grid.innerHTML = '';
-  state.pendingFiles.forEach((f, i) => {
-    const div = document.createElement('div');
-    div.className = 'preview-item';
-    div.innerHTML = `<img src="${f.data}" alt=""><button class="remove" onclick="removePending(${i})">✕</button>`;
-    grid.appendChild(div);
-  });
-}
-function removePending(i) {
-  state.pendingFiles.splice(i, 1);
-  renderPreviews();
-}
-
-/* ================= API: FETCH ALBUMS & PHOTOS ================= */
-async function fetchAlbums() {
-  try {
-    const res = await fetch(`${API_BASE}/profiles/default/albums?token=demo-token`);
-    const data = await res.json();
-    console.log('Albums from backend:', data);
-    if (data.albums) {
-      // Update tag counts from backend if needed
-    }
-  } catch (err) {
-    console.error('Fetch albums failed:', err);
-  }
-}
-
-async function fetchPhotos(albumId) {
-  try {
-    const res = await fetch(`${API_BASE}/profiles/default/photos?token=demo-token&album_id=${albumId || 'all'}`);
-    const data = await res.json();
-    console.log('Photos from backend:', data);
-    return data.photos || [];
-  } catch (err) {
-    console.error('Fetch photos failed:', err);
-    return [];
-  }
-}
-
-/* ================= UPLOAD TO BACKEND ================= */
-async function uploadToBackend() {
-  if (!state.pendingFiles.length) { toast('No files selected'); return; }
-  const btn = document.getElementById('upload-btn');
-  const wrap = document.getElementById('progress-wrap');
-  const fill = document.getElementById('progress-fill');
-  const text = document.getElementById('progress-text');
-  btn.disabled = true;
-  wrap.classList.remove('hidden');
-  let done = 0;
-  const total = state.pendingFiles.length;
-  const caption = document.getElementById('caption-input').value;
-
-  for (const file of state.pendingFiles) {
-    try {
-      const blob = await fetch(file.data).then(r => r.blob());
-      const formData = new FormData();
-      formData.append('token', 'demo-token');
-      formData.append('caption', done === 0 ? caption : '');
-      formData.append('files', blob, file.name);
-
-      const res = await fetch(`${API_BASE}/profiles/default/albums/all/photos`, {
-        method: 'POST',
-        body: formData
-      });
-      const result = await res.json();
-      if (result.uploaded && result.uploaded[0] && result.uploaded[0].status === 'ok') {
-        done++;
-        fill.style.width = Math.round((done/total)*100) + '%';
-        text.textContent = `Uploading ${done}/${total}...`;
-      } else {
-        toast('Upload failed: ' + (result.uploaded?.[0]?.error || 'Unknown error'));
-      }
-    } catch (err) {
-      toast('Upload failed: ' + err.message);
-      console.error(err);
-    }
-  }
-
-  fill.style.width = '100%';
-  text.textContent = 'Done!';
-  setTimeout(() => {
-    state.pendingFiles = [];
-    renderPreviews();
-    wrap.classList.add('hidden');
-    fill.style.width = '0%';
-    btn.disabled = false;
-    document.getElementById('caption-input').value = '';
-    saveState();
-    renderTags();
-    renderGallery();
-    toast('Uploaded to Telegram!');
-    fetchAlbums();
-  }, 600);
-    }
-  /* ================= GALLERY ================= */
-function renderGallery() {
-  const grid = document.getElementById('gallery-grid');
-  const empty = document.getElementById('empty-state');
-  let photos = state.photos.filter(p => p.profile === state.activeProfile);
-  const q = document.getElementById('gallery-search').value.trim().toLowerCase();
-  if (q) photos = photos.filter(p => (p.name||'').toLowerCase().includes(q) || (p.caption||'').toLowerCase().includes(q));
-  if (state.activeTag === 'Favorites') photos = photos.filter(p => p.fav);
-  else if (state.activeTag !== 'All') photos = photos.filter(p => p.tags && p.tags.includes(state.activeTag));
-  photos.sort((a,b) => new Date(b.date) - new Date(a.date));
-  grid.innerHTML = '';
-  if (!photos.length) {
-    grid.classList.add('hidden');
-    empty.classList.remove('hidden');
-    return;
-  }
-  grid.classList.remove('hidden');
-  empty.classList.add('hidden');
-  photos.forEach((ph, idx) => {
-    const card = document.createElement('div');
-    card.className = 'photo-card' + (state.selected.has(ph.id) ? ' selected' : '');
-    const isVideo = ph.src && ph.src.startsWith('data:video');
-    card.innerHTML = `
-      <img src="${ph.src}" alt="${ph.name}" loading="lazy">
-      ${ph.fav ? '<button class="star faved" onclick="toggleFav(event,\''+ph.id+'\')">★</button>' : '<button class="star" onclick="toggleFav(event,\''+ph.id+'\')">☆</button>'}
-      <div class="select-ring" onclick="toggleSelect(event,'${ph.id}')">${state.selected.has(ph.id)?'✓':''}</div>
-      <div class="info-bar"><span>${isVideo?'▶️':''} ${formatSize(ph.size)}</span><span>${formatDate(ph.date)}</span></div>
-    `;
-    card.onclick = (e) => {
-      if (state.selectMode || e.target.closest('.star') || e.target.closest('.select-ring')) return;
-      openViewer(ph.id);
-    };
-    grid.appendChild(card);
-  });
-}
-function doSearch() { renderGallery(); }
-function formatSize(s) {
-  if (!s) return '';
-  const kb = Math.round(s/1024);
-  if (kb < 1024) return kb + ' KB';
-  return (kb/1024).toFixed(1) + ' MB';
-}
-function formatDate(d) {
-  if (!d) return '';
-  const date = new Date(d);
-  return date.toLocaleDateString(undefined, { month:'short', day:'numeric' });
-}
-
-/* ================= SELECTION ================= */
-function toggleSelectMode() {
-  state.selectMode = !state.selectMode;
-  if (!state.selectMode) state.selected.clear();
-  renderGallery();
-  updateBulkBar();
-}
-function toggleSelect(e, id) {
-  e.stopPropagation();
-  if (state.selected.has(id)) state.selected.delete(id);
-  else state.selected.add(id);
-  if (!state.selectMode && state.selected.size) state.selectMode = true;
-  renderGallery();
-  updateBulkBar();
-}
-function updateBulkBar() {
-  const bar = document.getElementById('bulk-bar');
-  if (state.selected.size) {
-    bar.classList.remove('hidden');
-    document.getElementById('bulk-count').textContent = `${state.selected.size} selected`;
-  } else {
-    bar.classList.add('hidden');
-  }
-}
-function clearSelection() {
-  state.selected.clear();
-  state.selectMode = false;
-  renderGallery();
-  updateBulkBar();
-}
-function bulkDelete() {
-  if (!confirm(`Delete ${state.selected.size} photos?`)) return;
-  state.photos = state.photos.filter(p => !state.selected.has(p.id));
-  state.selected.clear();
-  state.selectMode = false;
-  saveState();
-  renderGallery();
-  renderTags();
-  updateBulkBar();
-  toast('Deleted');
-}
-function bulkShare() {
-  const ids = Array.from(state.selected);
-  if (!ids.length) return;
-  state.shareTarget = ids;
-  showModal('share-modal');
-}
-function bulkMove() {
-  const ids = Array.from(state.selected);
-  if (!ids.length) return;
-  state.shareTarget = ids;
-  const list = document.getElementById('move-profile-list');
-  list.innerHTML = '';
-  state.profiles.forEach(p => {
-    if (p.id === state.activeProfile) return;
-    const row = document.createElement('div');
-    row.className = 'sheet-option';
-    row.innerHTML = `<div class="so-icon">${p.icon}</div><div class="so-text"><div class="so-title">${p.name}</div><div class="so-desc">${countPhotos(p.id)} items</div></div>`;
-    row.onclick = () => executeMove(p.id);
-    list.appendChild(row);
-  });
-  showModal('move-modal');
-}
-function hideMoveModal(e) { if(e.target===e.currentTarget) hideModal('move-modal'); }
-function executeMove(targetId) {
-  const ids = Array.isArray(state.shareTarget) ? state.shareTarget : [];
-  let moved = 0;
-  state.photos.forEach(ph => {
-    if (ids.includes(ph.id)) { ph.profile = targetId; moved++; }
-  });
-  state.selected.clear();
-  state.selectMode = false;
-  saveState();
-  renderProfiles();
-  renderTags();
-  renderGallery();
-  updateBulkBar();
-  hideModal('move-modal');
-  toast(`Moved ${moved} photos`);
-}
-
-/* ================= VIEWER ================= */
-function openViewer(id) {
-  const photos = getVisiblePhotos();
-  const idx = photos.findIndex(p => p.id === id);
-  if (idx === -1) return;
-  state.viewerIndex = idx;
-  updateViewer(photos);
-  document.getElementById('viewer').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-}
-function getVisiblePhotos() {
-  let photos = state.photos.filter(p => p.profile === state.activeProfile);
-  const q = document.getElementById('gallery-search').value.trim().toLowerCase();
-  if (q) photos = photos.filter(p => (p.name||'').toLowerCase().includes(q) || (p.caption||'').toLowerCase().includes(q));
-  if (state.activeTag === 'Favorites') photos = photos.filter(p => p.fav);
-  else if (state.activeTag !== 'All') photos = photos.filter(p => p.tags && p.tags.includes(state.activeTag));
-  photos.sort((a,b) => new Date(b.date) - new Date(a.date));
-  return photos;
-}
-function updateViewer(photos) {
-  const ph = photos[state.viewerIndex];
-  if (!ph) { closeViewer(); return; }
-  document.getElementById('viewer-img').src = ph.src;
-  document.getElementById('v-title').textContent = ph.name || 'Photo';
-  document.getElementById('viewer-caption').textContent = ph.caption || '';
-  document.getElementById('viewer-details').innerHTML = `<span>${formatDate(ph.date)}</span><span>${formatSize(ph.size)}</span><span>${ph.profile}</span>`;
-  document.getElementById('v-star-btn').textContent = ph.fav ? '★' : '☆';
-  document.getElementById('v-star-btn').style.color = ph.fav ? 'var(--warning)' : 'white';
-}
-function closeViewer() {
-  document.getElementById('viewer').classList.add('hidden');
-  document.body.style.overflow = '';
-}
-function viewerPrev() {
-  const photos = getVisiblePhotos();
-  state.viewerIndex = (state.viewerIndex - 1 + photos.length) % photos.length;
-  updateViewer(photos);
-}
-function viewerNext() {
-  const photos = getVisiblePhotos();
-  state.viewerIndex = (state.viewerIndex + 1) % photos.length;
-  updateViewer(photos);
-}
-function toggleFavViewer() {
-  const photos = getVisiblePhotos();
-  const ph = photos[state.viewerIndex];
-  if (!ph) return;
-  ph.fav = !ph.fav;
-  saveState();
-  updateViewer(photos);
-  renderGallery();
-  renderTags();
-}
-function toggleFav(e, id) {
-  e.stopPropagation();
-  const ph = state.photos.find(p => p.id === id);
-  if (ph) { ph.fav = !ph.fav; saveState(); renderGallery(); renderTags(); }
-}
-function downloadCurrent() {
-  const photos = getVisiblePhotos();
-  const ph = photos[state.viewerIndex];
-  if (!ph) return;
-  const a = document.createElement('a');
-  a.href = ph.src;
-  a.download = ph.name || 'download';
-  a.click();
-  toast('Downloading...');
-}
-function showShareSheetFromViewer() {
-  const photos = getVisiblePhotos();
-  const ph = photos[state.viewerIndex];
-  state.shareTarget = ph ? [ph.id] : [];
-  showModal('share-modal');
-}
-
-/* ================= VIEWER SWIPE ================= */
-function setupViewerSwipe() {
-  const wrap = document.getElementById('viewer-img-wrap');
-  let startX = 0, startY = 0, dx = 0, dy = 0, tracking = false;
-  wrap.addEventListener('touchstart', e => {
-    if (e.touches.length !== 1) return;
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    dx = 0; dy = 0;
-    tracking = true;
-  }, { passive: true });
-  wrap.addEventListener('touchmove', e => {
-    if (!tracking || e.touches.length !== 1) return;
-    dx = e.touches[0].clientX - startX;
-    dy = e.touches[0].clientY - startY;
-    const img = document.getElementById('viewer-img');
-    if (Math.abs(dx) > Math.abs(dy)) {
-      img.style.transform = `translateX(${dx}px) scale(0.98)`;
-      img.style.transition = 'none';
-    }
-  }, { passive: true });
-  wrap.addEventListener('touchend', e => {
-    if (!tracking) return;
-    tracking = false;
-    const img = document.getElementById('viewer-img');
-    img.style.transition = 'transform 0.25s ease';
-    img.style.transform = '';
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
-      if (dx > 0) viewerPrev(); else viewerNext();
-    }
-  });
-}
-
-/* ================= SHARE ================= */
-function closeShareSheet(e) { if(e.target===e.currentTarget) hideModal('share-modal'); }
-function shareCopyLink() {
-  const ids = Array.isArray(state.shareTarget) ? state.shareTarget : [];
-  const text = 'TeleGallery shared photos: ' + ids.join(', ');
-  navigator.clipboard.writeText(text).then(() => toast('Link copied'));
-  hideModal('share-modal');
-}
-function shareNative() {
-  const ids = Array.isArray(state.shareTarget) ? state.shareTarget : [];
-  const photos = state.photos.filter(p => ids.includes(p.id));
-  if (!photos.length) return;
-  if (navigator.share) {
-    navigator.share({
-      title: 'TeleGallery Photos',
-      text: photos.map(p => p.caption || p.name).join('\n'),
-      url: location.href
-    }).catch(()=>{});
-  } else {
-    toast('Native share not supported');
-  }
-  hideModal('share-modal');
-}
-function shareTelegram() {
-  const ids = Array.isArray(state.shareTarget) ? state.shareTarget : [];
-  const photos = state.photos.filter(p => ids.includes(p.id));
-  if (!photos.length) return;
-  const text = photos.map(p => p.caption || p.name).join('\n');
-  const url = 'https://t.me/share/url?url=' + encodeURIComponent(location.href) + '&text=' + encodeURIComponent(text);
-  window.open(url, '_blank');
-  hideModal('share-modal');
-}
-function shareDownload() {
-  const ids = Array.isArray(state.shareTarget) ? state.shareTarget : [];
-  ids.forEach(id => {
-    const ph = state.photos.find(p => p.id === id);
-    if (ph) { const a=document.createElement('a'); a.href=ph.src; a.download=ph.name||'photo'; a.click(); }
-  });
-  toast('Downloaded');
-  hideModal('share-modal');
-    }
-  /* ================= NAVIGATION ================= */
-function switchTab(tab) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-  document.getElementById(tab + '-screen').classList.remove('hidden');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  if (tab === 'upload') {
-    document.querySelectorAll('.nav-item')[0].classList.add('active');
-    document.querySelectorAll('.nav-item')[1].classList.remove('active');
-  } else {
-    document.querySelectorAll('.nav-item')[0].classList.remove('active');
-    document.querySelectorAll('.nav-item')[1].classList.add('active');
-    renderGallery();
-  }
-}
-
-/* ================= MODALS ================= */
-function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
-function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-/* ================= TOAST ================= */
-function toast(msg) {
-  const el = document.createElement('div');
-  el.className = 'toast';
-  el.textContent = msg;
-  document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => el.remove(), 2200);
-}
-
-/* ================= KEYBOARD ================= */
-document.addEventListener('keydown', e => {
-  if (document.getElementById('viewer').classList.contains('hidden')) return;
-  if (e.key === 'Escape') closeViewer();
-  if (e.key === 'ArrowLeft') viewerPrev();
-  if (e.key === 'ArrowRight') viewerNext();
-});
-
-/* ================= START ================= */
-init();
-
-
-/* ================= AUTH & PIN ================= */
-let currentUser = null;
-let currentInvite = null;
-let pinBuffer = '';
-let pinCallback = null;
-let currentPhotoId = null;
-let currentInviteUrl = '';
-
-function checkAuth() {
-  const token = localStorage.getItem('tg_token');
-  const invite = new URLSearchParams(location.search).get('invite');
-
-  if (invite) {
-    currentInvite = invite;
-    loadInviteInfo(invite);
-    document.getElementById('auth-screen').classList.add('hidden');
-    document.getElementById('invite-screen').classList.remove('hidden');
-    return;
-  }
-
-  if (!token) {
-    document.getElementById('auth-screen').classList.remove('hidden');
-    document.getElementById('upload-screen').classList.add('hidden');
-    return;
-  }
-
-  fetch(`${API_BASE}/api/auth/me?token=${token}`)
-    .then(r => r.json())
-    .then(data => {
-      if (data.id) {
-        currentUser = data;
-        if (data.has_pin) {
-          showPinScreen(() => verifyAndLogin(token));
-        } else {
-          showApp();
-        }
-      } else {
-        localStorage.removeItem('tg_token');
-        showAuth();
-      }
-    })
-    .catch(() => showAuth());
-}
-
-function verifyAndLogin(token) {
-  fetch(`${API_BASE}/api/auth/verify-pin`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `token=${encodeURIComponent(token)}&pin=${encodeURIComponent(pinBuffer)}`
-  })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        hidePinScreen();
-        showApp();
-      } else {
-        pinBuffer = '';
-        updatePinDots();
-        toast('Wrong PIN');
-      }
-    })
-    .catch(() => {
-      pinBuffer = '';
-      updatePinDots();
-      toast('PIN check failed');
-    });
-}
-
-function showPinScreen(callback) {
-  pinBuffer = '';
-  pinCallback = callback;
-  updatePinDots();
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-  document.getElementById('pin-screen').classList.remove('hidden');
-}
-
-function enterPin(num) {
-  if (pinBuffer.length < 4) {
-    pinBuffer += num;
-    updatePinDots();
-    if (pinBuffer.length === 4) {
-      setTimeout(() => {
-        if (pinCallback) pinCallback(pinBuffer);
-      }, 200);
-    }
-  }
-}
-
-function backspacePin() {
-  pinBuffer = pinBuffer.slice(0, -1);
-  updatePinDots();
-}
-
-function updatePinDots() {
-  for (let i = 1; i <= 4; i++) {
-    const dot = document.getElementById('pin-' + i);
-    if (dot) {
-      dot.style.background = i <= pinBuffer.length ? 'var(--accent)' : 'transparent';
-      dot.style.borderColor = i <= pinBuffer.length ? 'var(--accent)' : 'var(--border)';
-    }
-  }
-}
-
-function forgotPin() {
-  toast('Contact album owner to reset PIN');
-}
-
-function hidePinScreen() {
-  document.getElementById('pin-screen').classList.add('hidden');
-}
-
-function showApp() {
-  document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('upload-screen').classList.remove('hidden');
-  init();
-}
-
-function showAuth() {
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-  document.getElementById('auth-screen').classList.remove('hidden');
-}
-
-function showRegister() {
-  document.getElementById('login-form').classList.add('hidden');
-  document.getElementById('register-form').classList.remove('hidden');
-}
-
-function showLogin() {
-  document.getElementById('register-form').classList.add('hidden');
-  document.getElementById('login-form').classList.remove('hidden');
-}
-
-async function login() {
-  const token = document.getElementById('auth-token').value.trim();
-  if (!token) { toast('Enter your token'); return; }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `token=${encodeURIComponent(token)}`
-    });
-    const data = await res.json();
-
-    if (data.success) {
-      localStorage.setItem('tg_token', token);
-      currentUser = data.user;
-      if (data.user.has_pin) {
-        showPinScreen(() => verifyAndLogin(token));
-      } else {
-        showApp();
-      }
-      toast(`Welcome back, ${data.user.name}!`);
-    } else {
-      toast('Invalid token');
-    }
-  } catch (err) {
-    toast('Login failed: ' + err.message);
-  }
-}
-
-async function register() {
-  const name = document.getElementById('reg-name').value.trim();
-  const apiId = document.getElementById('reg-api-id').value.trim();
-  const apiHash = document.getElementById('reg-api-hash').value.trim();
-  const botToken = document.getElementById('reg-bot-token').value.trim();
-  const groupId = document.getElementById('reg-group-id').value.trim();
-  const pin = document.getElementById('reg-pin') ? document.getElementById('reg-pin').value.trim() : '';
-
-  if (!name || !apiId || !apiHash || !botToken || !groupId) {
-    toast('Fill all fields'); return;
-  }
-
-  try {
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('api_id', apiId);
-    formData.append('api_hash', apiHash);
-    formData.append('bot_token', botToken);
-    formData.append('group_id', groupId);
-    if (pin) formData.append('pin', pin);
-
-    const res = await fetch(`${API_BASE}/api/auth/register`, {
-      method: 'POST',
-      body: formData
-    });
-    const data = await res.json();
-
-    if (data.success) {
-      localStorage.setItem('tg_token', data.token);
-      toast('Account created! Logging in...');
-      currentUser = { id: data.user_id, name: name };
-      if (pin) {
-        showPinScreen(() => {
-          hidePinScreen();
-          showApp();
-        });
-      } else {
-        showApp();
-      }
-    } else {
-      toast(data.detail || 'Registration failed');
-    }
-  } catch (err) {
-    toast('Registration failed: ' + err.message);
-  }
-}
-
-function logout() {
-  localStorage.removeItem('tg_token');
-  currentUser = null;
-  showAuth();
-  toast('Logged out');
-}
-
-/* ================= INVITES ================= */
-async function loadInviteInfo(inviteId) {
-  try {
-    const res = await fetch(`${API_BASE}/api/invites/${inviteId}`);
-    const data = await res.json();
-    document.getElementById('invite-owner').textContent = `Album by ${data.owner_name}`;
-  } catch (err) {
-    document.getElementById('invite-owner').textContent = 'Invalid invite link';
-  }
-}
-
-async function acceptInvite() {
-  if (!currentInvite) return;
-  toast('Joining album...');
-  document.getElementById('invite-screen').classList.add('hidden');
-  document.getElementById('upload-screen').classList.remove('hidden');
-}
-
-async function createInvite(albumId) {
-  const token = localStorage.getItem('tg_token');
-  if (!token) { toast('Login first'); return; }
-
-  try {
-    const formData = new FormData();
-    formData.append('token', token);
-    formData.append('album_id', albumId);
-
-    const res = await fetch(`${API_BASE}/api/invites`, {
-      method: 'POST',
-      body: formData
-    });
-    const data = await res.json();
-
-    if (data.invite_id) {
-      const fullUrl = `${location.origin}${location.pathname}?invite=${data.invite_id}`;
-      navigator.clipboard.writeText(fullUrl);
-      toast('Invite link copied!');
-      return fullUrl;
-    }
-  } catch (err) {
-    toast('Failed to create invite');
-  }
-}
-
-/* ================= TRASH ================= */
-async function showTrash() {
-  const token = localStorage.getItem('tg_token');
-  if (!token) { toast('Login first'); return; }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/trash?token=${token}`);
-    const data = await res.json();
-
-    const grid = document.getElementById('trash-grid');
-    const empty = document.getElementById('trash-empty');
-
-    grid.innerHTML = '';
-    if (!data.trash || !data.trash.length) {
-      grid.classList.add('hidden');
-      empty.classList.remove('hidden');
-    } else {
-      grid.classList.remove('hidden');
-      empty.classList.add('hidden');
-
-      data.trash.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'photo-card';
-        card.innerHTML = `
-          <div style="display:flex; align-items:center; justify-content:center; height:100%; color:var(--text-muted);">
-            <div style="text-align:center;">
-              <div style="font-size:2rem; margin-bottom:8px;">🗑️</div>
-              <div style="font-size:0.8rem;">${item.caption || 'Deleted photo'}</div>
-              <div style="font-size:0.7rem; margin-top:4px;">${formatDate(item.date)}</div>
+    <div id="app" class="app hidden">
+        <!-- Auth Screen -->
+        <div id="auth-screen" class="auth-screen">
+            <div class="auth-card">
+                <div class="logo">📸</div>
+                <h2>Telegallery</h2>
+                <p>Your photos, secured in Telegram</p>
+                <div class="auth-tabs">
+                    <button class="auth-tab active" onclick="switchAuth('login')">Sign In</button>
+                    <button class="auth-tab" onclick="switchAuth('register')">Sign Up</button>
+                </div>
+                <div id="login-form">
+                    <div class="input-group">
+                        <label class="input-label">Email</label>
+                        <input type="email" class="input" id="login-email" placeholder="your@email.com">
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="login()">Sign In</button>
+                </div>
+                <div id="register-form" class="hidden">
+                    <div class="input-group">
+                        <label class="input-label">Name</label>
+                        <input type="text" class="input" id="reg-name" placeholder="Your Name">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Email</label>
+                        <input type="email" class="input" id="reg-email" placeholder="your@email.com">
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="register()">Create Account</button>
+                </div>
+                <div id="invite-section" class="hidden" style="margin-top:20px;">
+                    <p style="color:var(--text2);font-size:14px;margin-bottom:12px;">You have an invite!</p>
+                    <div class="input-group">
+                        <input type="text" class="input" id="invite-name" placeholder="Your Name">
+                    </div>
+                    <button class="btn btn-success btn-block" onclick="acceptInvite()">Accept Invite</button>
+                </div>
             </div>
-          </div>
-          <div style="position:absolute; bottom:0; left:0; right:0; padding:8px; display:flex; gap:6px; background:linear-gradient(transparent, rgba(0,0,0,0.6));">
-            <button type="button" style="flex:1; padding:6px; border:none; border-radius:6px; background:var(--success); color:white; font-size:0.75rem; font-weight:600; cursor:pointer;" onclick="restorePhoto(${item.photo_id})">Restore</button>
-            <button type="button" style="flex:1; padding:6px; border:none; border-radius:6px; background:var(--danger); color:white; font-size:0.75rem; font-weight:600; cursor:pointer;" onclick="permanentDelete(${item.photo_id})">Delete</button>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
+        </div>
 
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    document.getElementById('trash-screen').classList.remove('hidden');
-  } catch (err) {
-    toast('Failed to load trash');
-  }
-}
+        <!-- Main App -->
+        <div id="main-app" class="hidden">
+            <div class="header">
+                <div class="logo-text">Telegallery</div>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="toggleNotifications()" id="notif-btn">
+                        <span style="font-size:16px;">🔔</span>
+                        <span class="badge hidden" id="notif-badge">0</span>
+                    </button>
+                    <button class="icon-btn" onclick="showSettings()">
+                        <span style="font-size:16px;">⚙️</span>
+                    </button>
+                </div>
+            </div>
 
-async function restorePhoto(photoId) {
-  const token = localStorage.getItem('tg_token');
-  try {
-    await fetch(`${API_BASE}/api/trash/${photoId}/restore`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `token=${encodeURIComponent(token)}`
-    });
-    toast('Photo restored');
-    showTrash();
-  } catch (err) {
-    toast('Restore failed');
-  }
-}
+            <!-- Notifications Panel -->
+            <div id="notif-panel" class="notif-panel hidden"></div>
 
-async function permanentDelete(photoId) {
-  if (!confirm('Permanently delete? This cannot be undone.')) return;
-  const token = localStorage.getItem('tg_token');
-  try {
-    await fetch(`${API_BASE}/api/trash/${photoId}?token=${token}`, {
-      method: 'DELETE'
-    });
-    toast('Permanently deleted');
-    showTrash();
-  } catch (err) {
-    toast('Delete failed');
-  }
-}
+            <!-- View: Albums -->
+            <div id="view-albums">
+                <div class="albums-grid" id="albums-grid"></div>
+            </div>
 
-async function emptyTrash() {
-  if (!confirm('Empty trash? All items will be permanently deleted.')) return;
-  const token = localStorage.getItem('tg_token');
-  try {
-    const res = await fetch(`${API_BASE}/api/trash?token=${token}`);
-    const data = await res.json();
-    for (const item of data.trash || []) {
-      await fetch(`${API_BASE}/api/trash/${item.photo_id}?token=${token}`, { method: 'DELETE' });
-    }
-    toast('Trash emptied');
-    showTrash();
-  } catch (err) {
-    toast('Failed to empty trash');
-  }
-}
+            <!-- View: Album Detail -->
+            <div id="view-album-detail" class="hidden">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                    <button class="icon-btn" onclick="backToAlbums()">
+                        <span style="font-size:16px;">←</span>
+                    </button>
+                    <div style="flex:1;">
+                        <h2 id="album-detail-name" style="font-size:20px;font-weight:600;"></h2>
+                        <p id="album-detail-count" style="color:var(--text2);font-size:13px;"></p>
+                    </div>
+                    <button class="icon-btn" onclick="showUpload()">
+                        <span style="font-size:16px;">⬆️</span>
+                    </button>
+                    <button class="icon-btn" onclick="showAlbumMenu()">
+                        <span style="font-size:16px;">⋮</span>
+                    </button>
+                </div>
+                <div class="photos-grid" id="album-photos"></div>
+            </div>
 
-/* ================= STATS ================= */
-async function showStats() {
-  const token = localStorage.getItem('tg_token');
-  if (!token) { toast('Login first'); return; }
+            <!-- View: Timeline -->
+            <div id="view-timeline" class="hidden">
+                <h2 style="margin-bottom:20px;">Timeline</h2>
+                <div id="timeline-content"></div>
+            </div>
 
-  try {
-    const res = await fetch(`${API_BASE}/api/stats?token=${token}`);
-    const data = await res.json();
+            <!-- View: Stats -->
+            <div id="view-stats" class="hidden">
+                <h2 style="margin-bottom:20px;">Storage Stats</h2>
+                <div id="stats-content"></div>
+            </div>
 
-    document.getElementById('stat-photos').textContent = data.total_photos || 0;
-    document.getElementById('stat-videos').textContent = data.total_videos || 0;
-    document.getElementById('stat-total').textContent = data.total_media || 0;
-    document.getElementById('stat-trash').textContent = data.trash_count || 0;
+            <!-- View: Trash -->
+            <div id="view-trash" class="hidden">
+                <h2 style="margin-bottom:20px;">Trash</h2>
+                <div id="trash-content"></div>
+            </div>
 
-    let dateText = 'No photos yet';
-    if (data.earliest_photo && data.latest_photo) {
-      const earliest = new Date(data.earliest_photo).toLocaleDateString();
-      const latest = new Date(data.latest_photo).toLocaleDateString();
-      dateText = `From ${earliest} to ${latest}`;
-    }
-    document.getElementById('stat-dates').textContent = dateText;
+            <!-- View: Settings -->
+            <div id="view-settings" class="hidden">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                    <button class="icon-btn" onclick="backToAlbums()">
+                        <span style="font-size:16px;">←</span>
+                    </button>
+                    <h2>Settings</h2>
+                </div>
+                <div class="card">
+                    <div class="card-title">Account</div>
+                    <p id="settings-name" style="color:var(--text2);margin-bottom:16px;"></p>
+                    <button class="btn btn-danger btn-block" onclick="logout()">Logout</button>
+                </div>
+                <div class="card">
+                    <div class="card-title">Push Notifications</div>
+                    <p class="card-subtitle">Get notified about new photos and comments</p>
+                    <button class="btn btn-primary btn-block" id="push-btn" onclick="togglePush()">Enable Notifications</button>
+                </div>
+                <div class="card hidden" id="admin-settings">
+                    <div class="card-title">Admin</div>
+                    <button class="btn btn-secondary btn-block" onclick="showInviteModal()">Invite User</button>
+                </div>
+            </div>
+        </div>
 
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    document.getElementById('stats-screen').classList.remove('hidden');
-  } catch (err) {
-    toast('Failed to load stats');
-  }
-}
-
-/* ================= TIMELINE ================= */
-async function showTimeline() {
-  const token = localStorage.getItem('tg_token');
-  if (!token) { toast('Login first'); return; }
-
-  try {
-    const res = await fetch(`${API_BASE}/api/timeline?token=${token}`);
-    const data = await res.json();
-
-    const container = document.getElementById('timeline-content');
-    container.innerHTML = '';
-
-    if (!data.timeline || !data.timeline.length) {
-      container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:40px;">No photos yet</div>';
-    } else {
-      data.timeline.forEach(day => {
-        const section = document.createElement('div');
-        section.style.cssText = 'margin-bottom:20px;';
-
-        const date = new Date(day.date);
-        const dateStr = date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-        section.innerHTML = `
-          <div style="font-weight:700; font-size:1rem; margin-bottom:10px; color:var(--text); display:flex; align-items:center; gap:8px;">
-            <span>📅</span> ${dateStr}
-            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">${day.count} photos</span>
-          </div>
-          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(80px, 1fr)); gap:8px;">
-            ${day.photos.map(p => `
-              <div style="aspect-ratio:1; background:var(--surface); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; cursor:pointer; border:2px solid var(--border);" onclick="openViewerById(${p.id})">
-                <div style="font-size:1.5rem;">🖼️</div>
-              </div>
-            `).join('')}
-          </div>
-        `;
-        container.appendChild(section);
-      });
-    }
-
-    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-    document.getElementById('timeline-screen').classList.remove('hidden');
-  } catch (err) {
-    toast('Failed to load timeline');
-  }
-}
-
-function openViewerById(photoId) {
-  const photo = state.photos.find(p => p.id === photoId);
-  if (photo) {
-    openViewer(photoId);
-  } else {
-    toast('Photo not found in current view');
-  }
-}
-
-/* ================= COMMENTS ================= */
-async function showComments(photoId) {
-  currentPhotoId = photoId;
-  const token = localStorage.getItem('tg_token');
-
-  try {
-    const res = await fetch(`${API_BASE}/api/photos/${photoId}/comments?token=${token}`);
-    const data = await res.json();
-
-    const list = document.getElementById('comments-list');
-    list.innerHTML = '';
-
-    if (!data.comments || !data.comments.length) {
-      list.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">No comments yet</div>';
-    } else {
-      data.comments.forEach(c => {
-        const div = document.createElement('div');
-        div.style.cssText = 'padding:10px 0; border-bottom:1px solid var(--border);';
-        div.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-            <span style="font-weight:700; font-size:0.9rem;">${c.user}</span>
-            <span style="font-size:0.75rem; color:var(--text-muted);">${formatDate(c.date)}</span>
-          </div>
-          <div style="font-size:0.9rem; color:var(--text);">${c.text}</div>
-        `;
-        list.appendChild(div);
-      });
-    }
-
-    showModal('comments-modal');
-  } catch (err) {
-    toast('Failed to load comments');
-  }
-}
-
-async function postComment() {
-  const input = document.getElementById('comment-input');
-  const text = input.value.trim();
-  if (!text) return;
-
-  const token = localStorage.getItem('tg_token');
-  try {
-    const formData = new FormData();
-    formData.append('token', token);
-    formData.append('text', text);
-
-    await fetch(`${API_BASE}/api/photos/${currentPhotoId}/comments`, {
-      method: 'POST',
-      body: formData
-    });
-
-    input.value = '';
-    showComments(currentPhotoId);
-    toast('Comment added');
-  } catch (err) {
-    toast('Failed to add comment');
-  }
-}
-
-function hideCommentsModal(e) {
-  if (e.target === e.currentTarget) hideModal('comments-modal');
-}
-
-/* ================= QR INVITES ================= */
-async function showQrInvite(albumId) {
-  const token = localStorage.getItem('tg_token');
-  if (!token) { toast('Login first'); return; }
-
-  try {
-    const formData = new FormData();
-    formData.append('token', token);
-    formData.append('album_id', albumId || 'all');
-
-    const res = await fetch(`${API_BASE}/api/invites`, {
-      method: 'POST',
-      body: formData
-    });
-    const data = await res.json();
-
-    if (data.invite_id) {
-      currentInviteUrl = `${location.origin}${location.pathname}?invite=${data.invite_id}`;
-      document.getElementById('qr-code-display').textContent = '📱';
-      document.getElementById('qr-expiry').textContent = `Expires: ${new Date(data.expires).toLocaleDateString()}`;
-      showModal('qr-modal');
-    }
-  } catch (err) {
-    toast('Failed to create invite');
-  }
-}
-
-function copyInviteLink() {
-  if (currentInviteUrl) {
-    navigator.clipboard.writeText(currentInviteUrl);
-    toast('Invite link copied!');
-  }
-}
-
-/* ================= NAVIGATION ================= */
-function showGallery() {
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-  document.getElementById('gallery-screen').classList.remove('hidden');
-  renderGallery();
-}
-
-function showUpload() {
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-  document.getElementById('upload-screen').classList.remove('hidden');
-}
-
-/* ================= INIT OVERRIDE ================= */
-const originalInit = init;
-init = function() {
-  checkAuth();
-};
-
-</script>
-<!-- TRASH SCREEN -->
-<div id="trash-screen" class="screen hidden">
-  <div class="top-header">
-    <button type="button" class="header-btn" onclick="showGallery()">←</button>
-    <h1>🗑️ Trash</h1>
-    <button type="button" class="header-btn" onclick="emptyTrash()">🗑️</button>
-  </div>
-  <div class="gallery-grid" id="trash-grid"></div>
-  <div class="empty-state hidden" id="trash-empty">
-    <div class="es-icon">🗑️</div>
-    <div class="es-title">Trash is empty</div>
-    <div class="es-sub">Deleted photos stay here for 30 days</div>
-  </div>
-</div>
-
-<!-- STATS SCREEN -->
-<div id="stats-screen" class="screen hidden">
-  <div class="top-header">
-    <button type="button" class="header-btn" onclick="showGallery()">←</button>
-    <h1>📊 Stats</h1>
-  </div>
-  <div style="padding:16px;">
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
-      <div style="background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center;">
-        <div style="font-size:2rem; font-weight:800; color:var(--accent);" id="stat-photos">0</div>
-        <div style="color:var(--text-muted); font-size:0.85rem;">Photos</div>
-      </div>
-      <div style="background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center;">
-        <div style="font-size:2rem; font-weight:800; color:var(--success);" id="stat-videos">0</div>
-        <div style="color:var(--text-muted); font-size:0.85rem;">Videos</div>
-      </div>
-      <div style="background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center;">
-        <div style="font-size:2rem; font-weight:800; color:var(--warning);" id="stat-total">0</div>
-        <div style="color:var(--text-muted); font-size:0.85rem;">Total</div>
-      </div>
-      <div style="background:var(--surface); border-radius:var(--radius); padding:16px; text-align:center;">
-        <div style="font-size:2rem; font-weight:800; color:var(--danger);" id="stat-trash">0</div>
-        <div style="color:var(--text-muted); font-size:0.85rem;">In Trash</div>
-      </div>
+        <!-- Bottom Navigation -->
+        <div id="bottom-nav" class="bottom-nav hidden">
+            <button class="bottom-nav-item active" onclick="navTo('albums')" data-view="albums">
+                <span>🏠</span> Albums
+            </button>
+            <button class="bottom-nav-item" onclick="navTo('timeline')" data-view="timeline">
+                <span>📅</span> Timeline
+            </button>
+            <button class="bottom-nav-item" onclick="navTo('stats')" data-view="stats">
+                <span>📊</span> Stats
+            </button>
+            <button class="bottom-nav-item" onclick="navTo('trash')" data-view="trash">
+                <span>🗑️</span> Trash
+            </button>
+        </div>
     </div>
-    <div style="background:var(--surface); border-radius:var(--radius); padding:16px; margin-bottom:12px;">
-      <div style="font-weight:700; margin-bottom:8px;">📅 Timeline</div>
-      <div style="color:var(--text-muted); font-size:0.85rem;" id="stat-dates">Loading...</div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- PIN Modal -->
+    <div id="pin-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Enter PIN</h3>
+                <button class="modal-close" onclick="closePinModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="text-align:center;color:var(--text2);margin-bottom:20px;">This album is protected</p>
+                <div class="pin-display" id="pin-display">
+                    <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+                </div>
+                <div class="pin-pad">
+                    <button class="pin-key" onclick="pinInput(1)">1</button>
+                    <button class="pin-key" onclick="pinInput(2)">2</button>
+                    <button class="pin-key" onclick="pinInput(3)">3</button>
+                    <button class="pin-key" onclick="pinInput(4)">4</button>
+                    <button class="pin-key" onclick="pinInput(5)">5</button>
+                    <button class="pin-key" onclick="pinInput(6)">6</button>
+                    <button class="pin-key" onclick="pinInput(7)">7</button>
+                    <button class="pin-key" onclick="pinInput(8)">8</button>
+                    <button class="pin-key" onclick="pinInput(9)">9</button>
+                    <button class="pin-key" onclick="pinBackspace()">⌫</button>
+                    <button class="pin-key" onclick="pinInput(0)">0</button>
+                    <button class="pin-key" onclick="pinClear()">✕</button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- TIMELINE SCREEN -->
-<div id="timeline-screen" class="screen hidden">
-  <div class="top-header">
-    <button type="button" class="header-btn" onclick="showGallery()">←</button>
-    <h1>📅 Timeline</h1>
-  </div>
-  <div style="padding:16px;" id="timeline-content">
-    <div style="text-align:center; color:var(--text-muted); padding:40px;">Loading timeline...</div>
-  </div>
-</div>
-
-<!-- COMMENTS MODAL -->
-<div id="comments-modal" class="modal hidden" onclick="hideCommentsModal(event)">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>💬 Comments</h3>
-    <div id="comments-list" style="max-height:300px; overflow-y:auto; margin:12px 0;"></div>
-    <div style="display:flex; gap:8px; margin-top:12px;">
-      <input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1; padding:10px; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-size:0.95rem; outline:none;">
-      <button type="button" style="padding:10px 16px; background:var(--accent); color:white; border:none; border-radius:var(--radius-sm); font-weight:600; cursor:pointer;" onclick="postComment()">Send</button>
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox hidden">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <button class="lightbox-nav lightbox-prev" onclick="lightboxPrev()">‹</button>
+        <button class="lightbox-nav lightbox-next" onclick="lightboxNext()">›</button>
+        <div id="lightbox-media-container"></div>
+        <div class="lightbox-info">
+            <div class="lightbox-caption" id="lightbox-caption"></div>
+            <div class="lightbox-meta">
+                <span id="lightbox-date"></span>
+                <span id="lightbox-likes"></span>
+                <span id="lightbox-comments"></span>
+            </div>
+            <div class="comments-section" id="lightbox-comments-list"></div>
+            <div class="comment-input-row">
+                <input type="text" class="input" id="lightbox-comment-input" placeholder="Add a comment..." onkeypress="if(event.key==='Enter')addComment()">
+                <button class="btn btn-primary btn-sm" onclick="addComment()">Send</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px;">
+                <button class="btn btn-secondary btn-sm" onclick="toggleLikeLightbox()">Like</button>
+                <button class="btn btn-secondary btn-sm" onclick="downloadCurrent()">Download</button>
+                <button class="btn btn-danger btn-sm" onclick="trashCurrent()">Delete</button>
+            </div>
+        </div>
     </div>
-    <button type="button" class="sheet-close" style="margin-top:10px;" onclick="hideModal('comments-modal')">Close</button>
-  </div>
-</div>
 
-<!-- QR INVITE MODAL -->
-<div id="qr-modal" class="modal hidden" onclick="hideModal('qr-modal')">
-  <div class="modal-sheet" onclick="event.stopPropagation()">
-    <h3>🔗 Share Album</h3>
-    <div style="text-align:center; padding:20px;">
-      <div id="qr-code-display" style="width:200px; height:200px; margin:0 auto 16px; background:var(--surface); border-radius:var(--radius); display:flex; align-items:center; justify-content:center; font-size:4rem;">📱</div>
-      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;" id="qr-expiry">Expires in 7 days</div>
-      <button type="button" class="sheet-close" style="background:var(--accent); color:white;" onclick="copyInviteLink()">Copy Link</button>
+    <!-- Upload Modal -->
+    <div id="upload-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Upload Photos</h3>
+                <button class="modal-close" onclick="closeUploadModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+                    <span style="font-size:40px;display:block;margin-bottom:8px;">📁</span>
+                    <p>Tap to select photos or drag & drop</p>
+                    <p style="font-size:12px;color:var(--text3);margin-top:8px;">Photos are sent to your Telegram album</p>
+                </div>
+                <input type="file" id="file-input" multiple accept="image/*,video/*" class="hidden" onchange="handleFiles(this.files)">
+                <div class="upload-preview-grid" id="upload-preview"></div>
+                <div class="input-group">
+                    <label class="input-label">Caption (optional)</label>
+                    <input type="text" class="input" id="upload-caption" placeholder="Add a caption...">
+                </div>
+                <div class="progress-bar hidden" id="upload-progress">
+                    <div class="progress-fill" id="upload-progress-fill" style="width:0%"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="startUpload()" id="upload-btn">Upload</button>
+            </div>
+        </div>
     </div>
-    <button type="button" class="sheet-close" onclick="hideModal('qr-modal')">Close</button>
-  </div>
-</div>
 
+    <!-- Create Album Modal -->
+    <div id="create-album-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>New Album</h3>
+                <button class="modal-close" onclick="closeCreateAlbumModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label class="input-label">Album Name</label>
+                    <input type="text" class="input" id="album-name" placeholder="e.g. Summer 2024">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Description</label>
+                    <input type="text" class="input" id="album-desc" placeholder="Optional description">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">PIN Lock (optional)</label>
+                    <input type="password" class="input" id="album-pin" placeholder="4-digit PIN" maxlength="4" inputmode="numeric">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateAlbumModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createAlbum()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Modal -->
+    <div id="invite-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Invite User</h3>
+                <button class="modal-close" onclick="closeInviteModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label class="input-label">Email</label>
+                    <input type="email" class="input" id="invite-email" placeholder="friend@email.com">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Albums to Share</label>
+                    <div id="invite-albums-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+                </div>
+                <div id="qr-result" class="hidden qr-container">
+                    <div id="qr-code"></div>
+                    <p class="qr-url" id="qr-url"></p>
+                    <button class="btn btn-secondary btn-sm" onclick="copyInviteUrl()">Copy Link</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeInviteModal()">Close</button>
+                <button class="btn btn-primary" onclick="generateInvite()">Generate Invite</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Album Menu Modal -->
+    <div id="album-menu-modal" class="modal-overlay hidden">
+        <div class="modal" style="max-width:300px;">
+            <div class="modal-body" style="padding:12px;">
+                <button class="btn btn-secondary btn-block" onclick="showInviteModalForCurrent()" style="margin-bottom:8px;">Share Album</button>
+                <button class="btn btn-secondary btn-block" onclick="showAlbumStats()" style="margin-bottom:8px;">Album Stats</button>
+                <button class="btn btn-danger btn-block" onclick="closeAlbumMenu()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // CONFIG
+        const API_BASE = "https://opulent-memory-j47649g65g2ppv4-8000.app.github.dev";
+        const BOT_TOKEN = "";
+        const ADMIN_TOKEN = "demo-token";
+
+        // STATE
+        let state = {
+            user: null,
+            token: localStorage.getItem("telegallery_token"),
+            albums: [],
+            currentAlbum: null,
+            currentPhotos: [],
+            lightboxIndex: 0,
+            pinBuffer: "",
+            pinTargetAlbum: null,
+            pendingFiles: [],
+            inviteToken: null,
+            notifications: [],
+            pushEnabled: false,
+            view: "albums"
+        };
+
+        // INIT
+        document.addEventListener("DOMContentLoaded", async () => {
+            const params = new URLSearchParams(window.location.search);
+            const invite = params.get("invite");
+            if (invite) {
+                state.inviteToken = invite;
+                document.getElementById("invite-section").classList.remove("hidden");
+            }
+
+            if (state.token) {
+                const ok = await validateToken();
+                if (ok) {
+                    showMainApp();
+                    loadAlbums();
+                    loadNotifications();
+                    setupPush();
+                } else {
+                    showAuth();
+                }
+            } else {
+                showAuth();
+            }
+
+            const zone = document.getElementById("upload-zone");
+            zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("dragover"); });
+            zone.addEventListener("dragleave", () => zone.classList.remove("dragover"));
+            zone.addEventListener("drop", e => {
+                e.preventDefault(); zone.classList.remove("dragover");
+                handleFiles(e.dataTransfer.files);
+            });
+
+            setTimeout(() => document.getElementById("loading").classList.add("hidden"), 800);
+        });
+
+        // API
+        async function api(method, endpoint, body) {
+            body = body || null;
+            const opts = {
+                method: method,
+                headers: { "Content-Type": "application/json" }
+            };
+            if (state.token) opts.headers["Authorization"] = "Bearer " + state.token;
+            if (body) opts.body = JSON.stringify(body);
+
+            try {
+                const res = await fetch(API_BASE + endpoint, opts);
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || "HTTP " + res.status);
+                }
+                return await res.json();
+            } catch (e) {
+                toast(e.message, "error");
+                throw e;
+            }
+        }
+
+        async function validateToken() {
+            try {
+                const data = await api("GET", "/api/me?user_token=" + state.token);
+                state.user = data;
+                return true;
+            } catch {
+                localStorage.removeItem("telegallery_token");
+                state.token = null;
+                return false;
+            }
+        }
+
+        // AUTH
+        function switchAuth(mode) {
+            document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
+            event.target.classList.add("active");
+            document.getElementById("login-form").classList.toggle("hidden", mode !== "login");
+            document.getElementById("register-form").classList.toggle("hidden", mode !== "register");
+        }
+
+        async function login() {
+            const email = document.getElementById("login-email").value.trim();
+            if (!email) return toast("Enter your email", "error");
+            try {
+                const data = await api("POST", "/api/login", { email: email });
+                state.token = data.token;
+                localStorage.setItem("telegallery_token", data.token);
+                state.user = data;
+                showMainApp();
+                loadAlbums();
+                loadNotifications();
+                setupPush();
+                toast("Welcome back, " + data.name + "!");
+            } catch (e) {}
+        }
+
+        async function register() {
+            const name = document.getElementById("reg-name").value.trim();
+            const email = document.getElementById("reg-email").value.trim();
+            if (!name || !email) return toast("Fill all fields", "error");
+            try {
+                const data = await api("POST", "/api/register", { name: name, email: email });
+                state.token = data.token;
+                localStorage.setItem("telegallery_token", data.token);
+                state.user = data;
+                showMainApp();
+                loadAlbums();
+                setupPush();
+                toast("Welcome to Telegallery!");
+            } catch (e) {}
+        }
+
+        async function acceptInvite() {
+            const name = document.getElementById("invite-name").value.trim();
+            if (!name) return toast("Enter your name", "error");
+            try {
+                const data = await api("POST", "/api/invite/" + state.inviteToken + "/accept?name=" + encodeURIComponent(name));
+                state.token = data.token;
+                localStorage.setItem("telegallery_token", data.token);
+                state.user = data;
+                state.inviteToken = null;
+                document.getElementById("invite-section").classList.add("hidden");
+                showMainApp();
+                loadAlbums();
+                setupPush();
+                toast("Invite accepted! Welcome!");
+            } catch (e) {}
+        }
+
+        function logout() {
+            localStorage.removeItem("telegallery_token");
+            state.token = null;
+            state.user = null;
+            state.albums = [];
+            location.reload();
+        }
+
+        // NAVIGATION
+        function showAuth() {
+            document.getElementById("auth-screen").classList.remove("hidden");
+            document.getElementById("main-app").classList.add("hidden");
+            document.getElementById("bottom-nav").classList.add("hidden");
+        }
+
+        function showMainApp() {
+            document.getElementById("auth-screen").classList.add("hidden");
+            document.getElementById("main-app").classList.remove("hidden");
+            document.getElementById("bottom-nav").classList.remove("hidden");
+            document.getElementById("app").classList.remove("hidden");
+        }
+
+        function navTo(view) {
+            state.view = view;
+            document.querySelectorAll(".bottom-nav-item").forEach(b => b.classList.remove("active"));
+            document.querySelector("[data-view=" + view + "]").classList.add("active");
+
+            ["view-albums", "view-album-detail", "view-timeline", "view-stats", "view-trash", "view-settings"].forEach(id => {
+                document.getElementById(id).classList.add("hidden");
+            });
+
+            if (view === "albums") {
+                document.getElementById("view-albums").classList.remove("hidden");
+                loadAlbums();
+            } else if (view === "timeline") {
+                document.getElementById("view-timeline").classList.remove("hidden");
+                loadTimeline();
+            } else if (view === "stats") {
+                document.getElementById("view-stats").classList.remove("hidden");
+                loadStats();
+            } else if (view === "trash") {
+                document.getElementById("view-trash").classList.remove("hidden");
+                loadTrash();
+            }
+        }
+
+        function backToAlbums() {
+            navTo("albums");
+        }
+
+        function showSettings() {
+            document.querySelectorAll("#view-albums, #view-album-detail, #view-timeline, #view-stats, #view-trash").forEach(el => el.classList.add("hidden"));
+            document.getElementById("view-settings").classList.remove("hidden");
+            document.getElementById("settings-name").textContent = state.user ? state.user.name + " (" + state.user.email + ")" : "";
+            if (state.user && state.user.role === "admin") {
+                document.getElementById("admin-settings").classList.remove("hidden");
+            }
+        }
+
+        // ALBUMS
+        async function loadAlbums() {
+            try {
+                const data = await api("GET", "/api/albums?user_token=" + state.token);
+                state.albums = data.albums || [];
+                renderAlbums();
+            } catch (e) {}
+        }
+
+        function renderAlbums() {
+            const grid = document.getElementById("albums-grid");
+            grid.innerHTML = '<div class="album-new-btn" onclick="showCreateAlbum()"><span>+</span><p>New Album</p></div>';
+
+            state.albums.forEach(album => {
+                const div = document.createElement("div");
+                div.className = "album-card";
+                div.innerHTML = '<div class="album-thumb">📁</div><div class="album-info"><div class="album-name">' + escapeHtml(album.name) + '</div><div class="album-count">' + (album.description || "Album") + '</div></div>' + (album.pin_hash ? '<div class="album-lock">🔒</div>' : '');
+                div.onclick = function() { openAlbum(album.id); };
+                grid.appendChild(div);
+            });
+        }
+
+        async function openAlbum(albumId) {
+            const album = state.albums.find(function(a) { return a.id === albumId; });
+            if (!album) return;
+
+            if (album.pin_hash) {
+                state.pinTargetAlbum = albumId;
+                showPinModal();
+                return;
+            }
+
+            await enterAlbum(albumId);
+        }
+
+        async function enterAlbum(albumId) {
+            state.currentAlbum = albumId;
+            const album = state.albums.find(function(a) { return a.id === albumId; });
+
+            document.getElementById("view-albums").classList.add("hidden");
+            document.getElementById("view-album-detail").classList.remove("hidden");
+            document.getElementById("album-detail-name").textContent = album ? album.name : "Album";
+
+            await loadAlbumPhotos(albumId);
+        }
+
+        async function loadAlbumPhotos(albumId) {
+            try {
+                const data = await api("GET", "/api/albums/" + albumId + "/photos?user_token=" + state.token + "&limit=100");
+                state.currentPhotos = data.photos || [];
+                document.getElementById("album-detail-count").textContent = state.currentPhotos.length + " items";
+                renderPhotos();
+            } catch (e) {}
+        }
+
+        function renderPhotos() {
+            const grid = document.getElementById("album-photos");
+            grid.innerHTML = "";
+
+            if (state.currentPhotos.length === 0) {
+                grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><span>📭</span><h3>No photos yet</h3><p>Upload your first photo to this album</p></div>';
+                return;
+            }
+
+            state.currentPhotos.forEach(function(photo, idx) {
+                const div = document.createElement("div");
+                div.className = "photo-item";
+
+                if (photo.video) {
+                    div.innerHTML = '<video src="https://api.telegram.org/file/bot' + BOT_TOKEN + '/' + photo.video.file_id + '" preload="metadata" muted></video><div class="video-badge">▶ ' + formatDuration(photo.video.duration) + '</div>';
+                } else if (photo.photo) {
+                    div.innerHTML = '<img src="https://api.telegram.org/file/bot' + BOT_TOKEN + '/' + photo.photo.file_id + '" alt="" loading="lazy">';
+                }
+
+                div.innerHTML += '<div class="photo-overlay"><span style="font-size:12px;color:white;">' + (photo.likes_count || 0) + ' ❤️</span><div class="photo-actions"><button class="photo-action-btn ' + (photo.liked_by_me ? 'liked' : '') + '" onclick="event.stopPropagation();toggleLike(' + idx + ')">❤️</button><button class="photo-action-btn" onclick="event.stopPropagation();downloadPhoto(' + idx + ')">⬇️</button></div></div>';
+
+                div.onclick = function() { openLightbox(idx); };
+                grid.appendChild(div);
+            });
+        }
+
+        // PIN
+        function showPinModal() {
+            state.pinBuffer = "";
+            updatePinDisplay();
+            document.getElementById("pin-modal").classList.remove("hidden");
+        }
+
+        function closePinModal() {
+            document.getElementById("pin-modal").classList.add("hidden");
+            state.pinBuffer = "";
+            state.pinTargetAlbum = null;
+        }
+
+        function pinInput(n) {
+            if (state.pinBuffer.length < 4) {
+                state.pinBuffer += n;
+                updatePinDisplay();
+                if (state.pinBuffer.length === 4) {
+                    verifyPin();
+                }
+            }
+        }
+
+        function pinBackspace() {
+            state.pinBuffer = state.pinBuffer.slice(0, -1);
+            updatePinDisplay();
+        }
+
+        function pinClear() {
+            state.pinBuffer = "";
+            updatePinDisplay();
+        }
+
+        function updatePinDisplay() {
+            const dots = document.querySelectorAll("#pin-display .pin-dot");
+            dots.forEach(function(d, i) { d.classList.toggle("filled", i < state.pinBuffer.length); });
+        }
+
+        async function verifyPin() {
+            try {
+                await api("POST", "/api/albums/" + state.pinTargetAlbum + "/verify-pin", { album_id: state.pinTargetAlbum, pin: state.pinBuffer });
+                closePinModal();
+                await enterAlbum(state.pinTargetAlbum);
+            } catch (e) {
+                state.pinBuffer = "";
+                updatePinDisplay();
+                toast("Wrong PIN", "error");
+            }
+        }
+
+        // LIGHTBOX
+        function openLightbox(idx) {
+            state.lightboxIndex = idx;
+            renderLightbox();
+            document.getElementById("lightbox").classList.remove("hidden");
+            document.body.style.overflow = "hidden";
+        }
+
+        function renderLightbox() {
+            const photo = state.currentPhotos[state.lightboxIndex];
+            if (!photo) return;
+
+            const container = document.getElementById("lightbox-media-container");
+            container.innerHTML = "";
+
+            if (photo.video) {
+                const video = document.createElement("video");
+                video.className = "lightbox-media video-player";
+                video.src = "https://api.telegram.org/file/bot" + BOT_TOKEN + "/" + photo.video.file_id;
+                video.controls = true;
+                video.autoplay = true;
+                container.appendChild(video);
+            } else if (photo.photo) {
+                const img = document.createElement("img");
+                img.className = "lightbox-media";
+                img.src = "https://api.telegram.org/file/bot" + BOT_TOKEN + "/" + photo.photo.file_id;
+                container.appendChild(img);
+            }
+
+            document.getElementById("lightbox-caption").textContent = photo.caption || "";
+            document.getElementById("lightbox-date").textContent = photo.date ? new Date(photo.date * 1000).toLocaleDateString() : "";
+            document.getElementById("lightbox-likes").textContent = (photo.likes_count || 0) + " likes";
+            document.getElementById("lightbox-comments").textContent = (photo.comments || []).length + " comments";
+
+            renderComments(photo);
+        }
+
+        function renderComments(photo) {
+            const list = document.getElementById("lightbox-comments-list");
+            list.innerHTML = "";
+            (photo.comments || []).forEach(function(c) {
+                const div = document.createElement("div");
+                div.className = "comment-item";
+                div.innerHTML = '<div class="comment-avatar">' + (c.author ? c.author[0].toUpperCase() : "?") + '</div><div class="comment-body"><div class="comment-author">' + escapeHtml(c.author) + '</div><div class="comment-text">' + escapeHtml(c.text) + '</div><div class="comment-time">' + new Date(c.created_at).toLocaleDateString() + '</div></div>';
+                list.appendChild(div);
+            });
+        }
+
+        function closeLightbox() {
+            document.getElementById("lightbox").classList.add("hidden");
+            document.body.style.overflow = "";
+            const video = document.querySelector("#lightbox-media-container video");
+            if (video) video.pause();
+        }
+
+        function lightboxPrev() {
+            if (state.lightboxIndex > 0) {
+                state.lightboxIndex--;
+                renderLightbox();
+            }
+        }
+
+        function lightboxNext() {
+            if (state.lightboxIndex < state.currentPhotos.length - 1) {
+                state.lightboxIndex++;
+                renderLightbox();
+            }
+        }
+
+        // COMMENTS & LIKES
+        async function addComment() {
+            const input = document.getElementById("lightbox-comment-input");
+            const text = input.value.trim();
+            if (!text) return;
+
+            const photo = state.currentPhotos[state.lightboxIndex];
+            try {
+                await api("POST", "/api/comments", {
+                    message_id: photo.message_id,
+                    album_id: state.currentAlbum,
+                    text: text,
+                    user_token: state.token
+                });
+                input.value = "";
+                await loadAlbumPhotos(state.currentAlbum);
+                renderLightbox();
+                toast("Comment added!");
+            } catch (e) {}
+        }
+
+        async function toggleLikeLightbox() {
+            await toggleLike(state.lightboxIndex);
+            renderLightbox();
+        }
+
+        async function toggleLike(idx) {
+            const photo = state.currentPhotos[idx];
+            try {
+                const data = await api("POST", "/api/likes", {
+                    message_id: photo.message_id,
+                    album_id: state.currentAlbum,
+                    user_token: state.token
+                });
+                photo.liked_by_me = data.liked;
+                photo.likes_count = data.count;
+                renderPhotos();
+                toast(data.liked ? "Liked!" : "Unliked");
+            } catch (e) {}
+        }
+
+        // DOWNLOAD
+        async function downloadPhoto(idx) {
+            const photo = state.currentPhotos[idx];
+            const fileId = photo.photo ? photo.photo.file_id : (photo.video ? photo.video.file_id : null);
+            if (!fileId) return;
+
+            try {
+                const res = await fetch(API_BASE + "/api/download/" + fileId + "?user_token=" + state.token);
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "telegallery_" + photo.message_id + "." + (photo.video ? "mp4" : "jpg");
+                a.click();
+                URL.revokeObjectURL(url);
+                toast("Download started!");
+            } catch (e) {
+                toast("Download failed", "error");
+            }
+        }
+
+        function downloadCurrent() {
+            downloadPhoto(state.lightboxIndex);
+        }
+
+        // TRASH
+        async function trashCurrent() {
+            const photo = state.currentPhotos[state.lightboxIndex];
+            if (!confirm("Move to trash? You can restore it later.")) return;
+
+            try {
+                await api("POST", "/api/trash", {
+                    message_id: photo.message_id,
+                    album_id: state.currentAlbum,
+                    user_token: state.token
+                });
+                closeLightbox();
+                await loadAlbumPhotos(state.currentAlbum);
+                toast("Moved to trash");
+            } catch (e) {}
+        }
+
+        async function loadTrash() {
+            try {
+                const data = await api("GET", "/api/trash?user_token=" + state.token);
+                const container = document.getElementById("trash-content");
+
+                if (!data.trash || data.trash.length === 0) {
+                    container.innerHTML = '<div class="trash-empty"><span>🗑️</span><h3>Trash is empty</h3><p>Deleted items appear here for 30 days</p></div>';
+                    return;
+                }
+
+                container.innerHTML = "";
+                data.trash.forEach(function(item) {
+                    const div = document.createElement("div");
+                    div.className = "trash-item";
+                    div.innerHTML = '<div class="trash-item-thumb" style="background:var(--surface3);"></div><div class="trash-item-info"><div class="trash-item-name">Photo #' + item.message_id + '</div><div class="trash-item-meta">' + item.album_id + " &bull; " + new Date(item.trashed_at).toLocaleDateString() + '</div></div><button class="btn btn-success btn-sm" onclick="restoreItem(' + item.message_id + ', \'' + item.album_id + '\')">Restore</button>';
+                    container.appendChild(div);
+                });
+            } catch (e) {}
+        }
+
+        async function restoreItem(messageId, albumId) {
+            try {
+                await api("POST", "/api/trash/restore", {
+                    message_id: messageId,
+                    album_id: albumId,
+                    user_token: state.token
+                });
+                loadTrash();
+                toast("Restored!");
+            } catch (e) {}
+        }
+
+        // STATS
+        async function loadStats() {
+            try {
+                const data = await api("GET", "/api/stats?user_token=" + state.token);
+                const container = document.getElementById("stats-content");
+
+                let albumsHtml = "";
+                Object.entries(data.albums || {}).forEach(function(entry) {
+                    const id = entry[0];
+                    const alb = entry[1];
+                    const albumName = state.albums.find(function(a) { return a.id === id; });
+                    albumsHtml += '<div class="stats-album-row"><div><div class="stats-album-name">' + escapeHtml(albumName ? albumName.name : id) + '</div><div class="stats-album-detail">' + alb.photos + ' photos, ' + alb.videos + ' videos</div></div><div class="stats-album-detail">' + alb.size_mb + ' MB</div></div>';
+                });
+
+                container.innerHTML = '<div class="stats-grid"><div class="stat-card"><div class="stat-value">' + data.total_photos + '</div><div class="stat-label">Photos</div></div><div class="stat-card"><div class="stat-value">' + data.total_videos + '</div><div class="stat-label">Videos</div></div><div class="stat-card"><div class="stat-value">' + data.total_albums + '</div><div class="stat-label">Albums</div></div><div class="stat-card"><div class="stat-value">' + data.storage_estimate_mb + '</div><div class="stat-label">MB Used</div></div></div><div class="stats-albums">' + albumsHtml + '</div>';
+            } catch (e) {}
+        }
+
+        // TIMELINE
+        async function loadTimeline() {
+            try {
+                const data = await api("GET", "/api/timeline?user_token=" + state.token);
+                const container = document.getElementById("timeline-content");
+                const timeline = data.timeline || {};
+
+                if (Object.keys(timeline).length === 0) {
+                    container.innerHTML = '<div class="empty-state"><span>📅</span><h3>No timeline yet</h3><p>Upload photos to see them organized by date</p></div>';
+                    return;
+                }
+
+                container.innerHTML = "";
+                Object.entries(timeline).forEach(function(entry) {
+                    const date = entry[0];
+                    const items = entry[1];
+
+                    const section = document.createElement("div");
+                    section.innerHTML = '<div class="timeline-date">' + formatDate(date) + '</div>';
+                    const grid = document.createElement("div");
+                    grid.className = "timeline-grid";
+
+                    items.forEach(function(item) {
+                        const div = document.createElement("div");
+                        div.className = "photo-item";
+                        if (item.photo) {
+                            div.innerHTML = '<img src="https://api.telegram.org/file/bot' + BOT_TOKEN + '/' + item.photo.file_id + '" alt="" loading="lazy">';
+                        } else if (item.video) {
+                            div.innerHTML = '<video src="https://api.telegram.org/file/bot' + BOT_TOKEN + '/' + item.video.file_id + '" preload="metadata" muted></video><div class="video-badge">▶</div>';
+                        }
+                        div.onclick = function() {
+                            state.currentAlbum = item.album_id;
+                            loadAlbumPhotos(item.album_id).then(function() {
+                                const idx = state.currentPhotos.findIndex(function(p) { return p.message_id === item.message_id; });
+                                if (idx >= 0) openLightbox(idx);
+                            });
+                        };
+                        grid.appendChild(div);
+                    });
+
+                    section.appendChild(grid);
+                    container.appendChild(section);
+                });
+            } catch (e) {}
+        }
+
+        // UPLOAD
+        function showUpload() {
+            document.getElementById("upload-modal").classList.remove("hidden");
+            state.pendingFiles = [];
+            document.getElementById("upload-preview").innerHTML = "";
+            document.getElementById("upload-caption").value = "";
+            document.getElementById("upload-progress").classList.add("hidden");
+        }
+
+        function closeUploadModal() {
+            document.getElementById("upload-modal").classList.add("hidden");
+            state.pendingFiles = [];
+        }
+
+        function handleFiles(files) {
+            state.pendingFiles = Array.from(files);
+            const preview = document.getElementById("upload-preview");
+            preview.innerHTML = "";
+
+            state.pendingFiles.forEach(function(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement("img");
+                    img.className = "upload-preview";
+                    img.src = e.target.result;
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function startUpload() {
+            if (state.pendingFiles.length === 0) return toast("Select files first", "error");
+
+            const caption = document.getElementById("upload-caption").value;
+            const progressBar = document.getElementById("upload-progress");
+            const progressFill = document.getElementById("upload-progress-fill");
+            progressBar.classList.remove("hidden");
+
+            for (let i = 0; i < state.pendingFiles.length; i++) {
+                const pct = ((i + 1) / state.pendingFiles.length) * 100;
+                progressFill.style.width = pct + "%";
+                await new Promise(function(r) { setTimeout(r, 800); });
+            }
+
+            toast(state.pendingFiles.length + " photos uploaded!");
+            closeUploadModal();
+            await loadAlbumPhotos(state.currentAlbum);
+        }
+
+        // CREATE ALBUM
+        function showCreateAlbum() {
+            document.getElementById("create-album-modal").classList.remove("hidden");
+            document.getElementById("album-name").value = "";
+            document.getElementById("album-desc").value = "";
+            document.getElementById("album-pin").value = "";
+        }
+
+        function closeCreateAlbumModal() {
+            document.getElementById("create-album-modal").classList.add("hidden");
+        }
+
+        async function createAlbum() {
+            const name = document.getElementById("album-name").value.trim();
+            const desc = document.getElementById("album-desc").value.trim();
+            const pin = document.getElementById("album-pin").value.trim();
+
+            if (!name) return toast("Enter album name", "error");
+            if (pin && pin.length !== 4) return toast("PIN must be 4 digits", "error");
+
+            try {
+                await api("POST", "/api/albums", {
+                    name: name,
+                    description: desc,
+                    pin: pin || null,
+                    user_token: state.token
+                });
+                closeCreateAlbumModal();
+                loadAlbums();
+                toast("Album created!");
+            } catch (e) {}
+        }
+
+        // INVITES
+        function showInviteModal() {
+            document.getElementById("invite-modal").classList.remove("hidden");
+            document.getElementById("invite-email").value = "";
+            document.getElementById("qr-result").classList.add("hidden");
+
+            const list = document.getElementById("invite-albums-list");
+            list.innerHTML = "";
+            state.albums.forEach(function(alb) {
+                const label = document.createElement("label");
+                label.style.cssText = "display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px;background:var(--surface2);border-radius:8px;";
+                label.innerHTML = '<input type="checkbox" value="' + alb.id + '" class="invite-album-check"><span>' + escapeHtml(alb.name) + '</span>';
+                list.appendChild(label);
+            });
+        }
+
+        function showInviteModalForCurrent() {
+            closeAlbumMenu();
+            showInviteModal();
+        }
+
+        function closeInviteModal() {
+            document.getElementById("invite-modal").classList.add("hidden");
+        }
+
+        async function generateInvite() {
+            const email = document.getElementById("invite-email").value.trim();
+            if (!email) return toast("Enter email", "error");
+
+            const checked = document.querySelectorAll(".invite-album-check:checked");
+            const albumIds = Array.from(checked).map(function(c) { return c.value; });
+
+            try {
+                const data = await api("POST", "/api/invite", {
+                    email: email,
+                    album_ids: albumIds,
+                    admin_token: ADMIN_TOKEN
+                });
+
+                document.getElementById("qr-result").classList.remove("hidden");
+                document.getElementById("qr-url").textContent = data.invite_url;
+
+                const qrDiv = document.getElementById("qr-code");
+                qrDiv.innerHTML = "";
+                new QRCode(qrDiv, {
+                    text: data.invite_url,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+
+                toast("Invite generated!");
+            } catch (e) {}
+        }
+
+        function copyInviteUrl() {
+            const url = document.getElementById("qr-url").textContent;
+            navigator.clipboard.writeText(url);
+            toast("Link copied!");
+        }
+
+        // ALBUM MENU
+        function showAlbumMenu() {
+            document.getElementById("album-menu-modal").classList.remove("hidden");
+        }
+
+        function closeAlbumMenu() {
+            document.getElementById("album-menu-modal").classList.add("hidden");
+        }
+
+        function showAlbumStats() {
+            closeAlbumMenu();
+            navTo("stats");
+        }
+
+        // NOTIFICATIONS
+        async function loadNotifications() {
+            try {
+                const data = await api("GET", "/api/notifications?user_token=" + state.token);
+                state.notifications = data.notifications || [];
+                updateNotifBadge();
+            } catch (e) {}
+        }
+
+        function updateNotifBadge() {
+            const badge = document.getElementById("notif-badge");
+            const count = state.notifications.length;
+            badge.textContent = count;
+            badge.classList.toggle("hidden", count === 0);
+        }
+
+        function toggleNotifications() {
+            const panel = document.getElementById("notif-panel");
+            if (panel.classList.contains("hidden")) {
+                renderNotifications();
+                panel.classList.remove("hidden");
+                api("POST", "/api/notifications/read?user_token=" + state.token);
+                state.notifications = [];
+                updateNotifBadge();
+            } else {
+                panel.classList.add("hidden");
+            }
+        }
+
+        function renderNotifications() {
+            const panel = document.getElementById("notif-panel");
+            if (state.notifications.length === 0) {
+                panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);">No notifications</div>';
+                return;
+            }
+
+            panel.innerHTML = "";
+            state.notifications.forEach(function(n) {
+                const div = document.createElement("div");
+                div.className = "notif-item unread";
+                div.innerHTML = '<div>' + escapeHtml(n.message) + '</div><div class="notif-time">' + new Date(n.created_at).toLocaleTimeString() + '</div>';
+                panel.appendChild(div);
+            });
+        }
+
+        // PUSH NOTIFICATIONS
+        async function setupPush() {
+            if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+
+            try {
+                const reg = await navigator.serviceWorker.register("data:text/javascript,", { scope: "/" });
+                const sub = await reg.pushManager.getSubscription();
+                state.pushEnabled = !!sub;
+                updatePushButton();
+            } catch (e) {
+                console.log("Push not supported");
+            }
+        }
+
+        async function togglePush() {
+            if (!state.pushEnabled) {
+                const permission = await Notification.requestPermission();
+                if (permission === "granted") {
+                    try {
+                        const vapid = await api("GET", "/api/push/vapid-public-key");
+                        const reg = await navigator.serviceWorker.ready;
+                        const sub = await reg.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: urlBase64ToUint8Array(vapid.publicKey)
+                        });
+
+                        await api("POST", "/api/push/subscribe", {
+                            user_token: state.token,
+                            subscription: sub.toJSON()
+                        });
+
+                        state.pushEnabled = true;
+                        updatePushButton();
+                        toast("Notifications enabled!");
+                    } catch (e) {
+                        toast("Failed to enable notifications", "error");
+                    }
+                }
+            } else {
+                try {
+                    await api("POST", "/api/push/unsubscribe?user_token=" + state.token);
+                    const reg = await navigator.serviceWorker.ready;
+                    const sub = await reg.pushManager.getSubscription();
+                    if (sub) await sub.unsubscribe();
+                    state.pushEnabled = false;
+                    updatePushButton();
+                    toast("Notifications disabled");
+                } catch (e) {}
+            }
+        }
+
+        function updatePushButton() {
+            const btn = document.getElementById("push-btn");
+            btn.textContent = state.pushEnabled ? "Disable Notifications" : "Enable Notifications";
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = "=".repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/\-/g, "+").replace(/_/g, "/");
+            const rawData = window.atob(base64);
+            return Uint8Array.from([...rawData].map(function(char) { return char.charCodeAt(0); }));
+        }
+
+        // UTILS
+        function toast(message, type) {
+            type = type || "success";
+            const container = document.getElementById("toast-container");
+            const div = document.createElement("div");
+            div.className = "toast " + type;
+            div.textContent = message;
+            container.appendChild(div);
+            setTimeout(function() {
+                div.style.opacity = "0";
+                div.style.transform = "translateY(20px)";
+                setTimeout(function() { div.remove(); }, 300);
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return "";
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return m + ":" + s.toString().padStart(2, "0");
+        }
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            if (d.toDateString() === today.toDateString()) return "Today";
+            if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+            return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: d.getFullYear() !== today.getFullYear() ? "numeric" : undefined });
+        }
+
+        // KEYBOARD NAVIGATION
+        document.addEventListener("keydown", function(e) {
+            if (document.getElementById("lightbox").classList.contains("hidden")) return;
+            if (e.key === "Escape") closeLightbox();
+            if (e.key === "ArrowLeft") lightboxPrev();
+            if (e.key === "ArrowRight") lightboxNext();
+        });
+
+        // CLOSE MODALS ON BACKDROP CLICK
+        document.querySelectorAll(".modal-overlay").forEach(function(overlay) {
+            overlay.addEventListener("click", function(e) {
+                if (e.target === overlay) overlay.classList.add("hidden");
+            });
+        });
+    </script>
 </body>
 </html>
