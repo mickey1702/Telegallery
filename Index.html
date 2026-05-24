@@ -246,8 +246,7 @@ body {
 </style>
 </head>
 <body>
-
-<!-- UPLOAD SCREEN -->
+  <!-- UPLOAD SCREEN -->
 <div id="upload-screen" class="screen">
   <div class="profile-bar" id="profile-bar"></div>
   <div class="top-header">
@@ -431,6 +430,9 @@ body {
 <div id="toast-container"></div>
 
 <script>
+/* ================= API CONFIG ================= */
+const API_BASE = "https://opulent-memory-j47649g65g2ppv4-8000.app.github.dev";
+
 /* ================= STATE ================= */
 let state = {
   profiles: [],
@@ -446,6 +448,7 @@ let state = {
   shareTarget: null
 };
 const STORAGE_KEY = 'telegallery_v1';
+
 /* ================= INIT ================= */
 function init() {
   loadState();
@@ -464,6 +467,7 @@ function init() {
   renderGallery();
   setupDragDrop();
   setupViewerSwipe();
+  fetchAlbums();
 }
 
 /* ================= STORAGE ================= */
@@ -530,7 +534,7 @@ function switchProfile(id) {
 function countPhotos(profileId) {
   return state.photos.filter(ph => ph.profile === profileId).length;
 }
-function showProfileSettings() {
+  function showProfileSettings() {
   const list = document.getElementById('profile-list');
   list.innerHTML = '';
   state.profiles.forEach(p => {
@@ -691,7 +695,35 @@ function removePending(i) {
   state.pendingFiles.splice(i, 1);
   renderPreviews();
 }
-function uploadToBackend() {
+
+/* ================= API: FETCH ALBUMS & PHOTOS ================= */
+async function fetchAlbums() {
+  try {
+    const res = await fetch(`${API_BASE}/profiles/default/albums?token=demo-token`);
+    const data = await res.json();
+    console.log('Albums from backend:', data);
+    if (data.albums) {
+      // Update tag counts from backend if needed
+    }
+  } catch (err) {
+    console.error('Fetch albums failed:', err);
+  }
+}
+
+async function fetchPhotos(albumId) {
+  try {
+    const res = await fetch(`${API_BASE}/profiles/default/photos?token=demo-token&album_id=${albumId || 'all'}`);
+    const data = await res.json();
+    console.log('Photos from backend:', data);
+    return data.photos || [];
+  } catch (err) {
+    console.error('Fetch photos failed:', err);
+    return [];
+  }
+}
+
+/* ================= UPLOAD TO BACKEND ================= */
+async function uploadToBackend() {
   if (!state.pendingFiles.length) { toast('No files selected'); return; }
   const btn = document.getElementById('upload-btn');
   const wrap = document.getElementById('progress-wrap');
@@ -701,45 +733,51 @@ function uploadToBackend() {
   wrap.classList.remove('hidden');
   let done = 0;
   const total = state.pendingFiles.length;
-  function next() {
-    if (done >= total) {
-      fill.style.width = '100%';
-      text.textContent = 'Done!';
-      setTimeout(() => {
-        state.pendingFiles = [];
-        renderPreviews();
-        wrap.classList.add('hidden');
-        fill.style.width = '0%';
-        btn.disabled = false;
-        document.getElementById('caption-input').value = '';
-        saveState();
-        renderTags();
-        renderGallery();
-        toast('Uploaded successfully');
-      }, 600);
-      return;
+  const caption = document.getElementById('caption-input').value;
+
+  for (const file of state.pendingFiles) {
+    try {
+      const blob = await fetch(file.data).then(r => r.blob());
+      const formData = new FormData();
+      formData.append('token', 'demo-token');
+      formData.append('caption', done === 0 ? caption : '');
+      formData.append('files', blob, file.name);
+
+      const res = await fetch(`${API_BASE}/profiles/default/albums/all/photos`, {
+        method: 'POST',
+        body: formData
+      });
+      const result = await res.json();
+      if (result.uploaded && result.uploaded[0] && result.uploaded[0].status === 'ok') {
+        done++;
+        fill.style.width = Math.round((done/total)*100) + '%';
+        text.textContent = `Uploading ${done}/${total}...`;
+      } else {
+        toast('Upload failed: ' + (result.uploaded?.[0]?.error || 'Unknown error'));
+      }
+    } catch (err) {
+      toast('Upload failed: ' + err.message);
+      console.error(err);
     }
-    const file = state.pendingFiles[done];
-    const photo = {
-      id: 'ph_' + Date.now() + '_' + Math.random().toString(36).slice(2),
-      profile: state.activeProfile,
-      src: file.data,
-      name: file.name,
-      caption: document.getElementById('caption-input').value,
-      tags: state.activeTag === 'All' || state.activeTag === 'Favorites' ? [] : [state.activeTag],
-      fav: false,
-      date: new Date().toISOString(),
-      size: file.data.length
-    };
-    state.photos.push(photo);
-    done++;
-    fill.style.width = Math.round((done/total)*100) + '%';
-    text.textContent = `Uploading ${done}/${total}...`;
-    setTimeout(next, 300);
   }
-  next();
-}
-/* ================= GALLERY ================= */
+
+  fill.style.width = '100%';
+  text.textContent = 'Done!';
+  setTimeout(() => {
+    state.pendingFiles = [];
+    renderPreviews();
+    wrap.classList.add('hidden');
+    fill.style.width = '0%';
+    btn.disabled = false;
+    document.getElementById('caption-input').value = '';
+    saveState();
+    renderTags();
+    renderGallery();
+    toast('Uploaded to Telegram!');
+    fetchAlbums();
+  }, 600);
+    }
+  /* ================= GALLERY ================= */
 function renderGallery() {
   const grid = document.getElementById('gallery-grid');
   const empty = document.getElementById('empty-state');
@@ -1016,8 +1054,8 @@ function shareDownload() {
   });
   toast('Downloaded');
   hideModal('share-modal');
-}
-/* ================= NAVIGATION ================= */
+    }
+  /* ================= NAVIGATION ================= */
 function switchTab(tab) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   document.getElementById(tab + '-screen').classList.remove('hidden');
@@ -1058,5 +1096,3 @@ init();
 </script>
 </body>
 </html>
-
-
