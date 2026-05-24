@@ -254,16 +254,16 @@ body {
     <h1 style="font-size:1.5rem; margin-bottom:8px;">TeleGallery</h1>
     <p style="color:var(--text-muted); margin-bottom:30px; max-width:280px;">Your personal cloud gallery powered by Telegram</p>
 
-    <div id="login-form" style="width:100%; max-width:320px;">
+    <div id="login-form" style="width:100%; max-width:320px;" onsubmit="return false;">
       <div class="meta-section" style="padding:0 0 12px;">
         <label>Your Access Token</label>
         <input type="password" id="auth-token" placeholder="Paste your token here..." style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.95rem;outline:none;">
       </div>
-      <button class="sheet-close" style="background:var(--accent);color:white;margin-bottom:10px;" onclick="login()">🔐 Login</button>
+      <button type="button" class="sheet-close" style="background:var(--accent);color:white;margin-bottom:10px;" onclick="login()">🔐 Login</button>
       <p style="color:var(--text-muted); font-size:0.85rem;">New here? <a href="#" onclick="showRegister()" style="color:var(--accent); text-decoration:none; font-weight:600;">Create your own cloud</a></p>
     </div>
 
-    <div id="register-form" class="hidden" style="width:100%; max-width:320px;">
+    <div id="register-form" class="hidden" style="width:100%; max-width:320px;" onsubmit="return false;">
       <div class="meta-section" style="padding:0 0 10px;">
         <label>Your Name</label>
         <input type="text" id="reg-name" placeholder="e.g. John" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.95rem;outline:none;">
@@ -285,7 +285,7 @@ body {
         <input type="text" id="reg-group-id" placeholder="-100123456789" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.95rem;outline:none;">
         <p style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Create a group, add your bot, then get the ID</p>
       </div>
-      <button class="sheet-close" style="background:var(--accent);color:white;margin-bottom:8px;" onclick="register()">🚀 Create My Cloud</button>
+      <button type="button" class="sheet-close" style="background:var(--accent);color:white;margin-bottom:8px;" onclick="register()">🚀 Create My Cloud</button>
       <button class="sheet-close" onclick="showLogin()">← Back to Login</button>
     </div>
   </div>
