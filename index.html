@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeleCloud Ultra - Personal Telegram Cloud Portal</title>
+    <title>TeleCloud Ultra - Personal & Shared Telegram Cloud</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -17,6 +17,16 @@
                     fontFamily: {
                         sans: ['Plus Jakarta Sans', 'sans-serif'],
                         mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
                     }
                 }
             }
@@ -38,74 +48,89 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
+        .masonry-grid {
+            column-count: 1;
+            column-gap: 1.25rem;
+        }
+        @media (min-width: 640px) { .masonry-grid { column-count: 2; } }
+        @media (min-width: 1024px) { .masonry-grid { column-count: 3; } }
+        @media (min-width: 1280px) { .masonry-grid { column-count: 4; } }
+        .masonry-item { break-inside: avoid; margin-bottom: 1.25rem; }
     </style>
 </head>
 <body class="h-full bg-slate-950 font-sans antialiased text-slate-100 flex flex-col overflow-hidden">
 
-    <!-- AUTH SCREEN (Shown by default until logged in) -->
+    <!-- PROFESSIONAL AUTH SCREEN -->
     <div id="authOverlay" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
-        <div class="w-full max-w-md glass-panel p-8 rounded-3xl shadow-2xl border border-slate-800 space-y-6 text-center">
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-400 p-0.5 shadow-lg shadow-indigo-500/30 mx-auto flex items-center justify-center">
-                <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                    <i class="fa-solid fa-paper-plane text-2xl text-indigo-400"></i>
+        <div class="w-full max-w-md glass-panel p-8 rounded-3xl shadow-2xl border border-slate-800 space-y-6">
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-400 p-0.5 shadow-lg shadow-indigo-500/30 mx-auto flex items-center justify-center">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                        <i class="fa-solid fa-paper-plane text-xl text-indigo-400"></i>
+                    </div>
                 </div>
-            </div>
-            
-            <div>
-                <h2 class="text-2xl font-extrabold text-white">TeleCloud Ultra</h2>
-                <p class="text-xs text-slate-400 mt-1" id="authSubtitle">Log in to unlock your personal Telegram Cloud</p>
+                <h2 class="text-xl font-extrabold text-white">TeleCloud Ultra</h2>
+                <p class="text-xs text-slate-400" id="authSubtitle">Secure Telegram Cloud Portal</p>
             </div>
 
-            <form id="authForm" class="space-y-4 text-left" onsubmit="handleAuthSubmit(event)">
+            <!-- Tab Switcher for Login / Register -->
+            <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
+                <button type="button" onclick="setAuthTab('login')" id="tabLoginBtn" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white transition">Sign In</button>
+                <button type="button" onclick="setAuthTab('register')" id="tabRegBtn" class="flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition">Create Account</button>
+            </div>
+
+            <form id="authForm" class="space-y-4" onsubmit="handleAuthSubmit(event)">
+                <div id="emailFieldContainer" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Email Address</label>
+                    <input type="email" id="authEmail" placeholder="name@example.com" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Username</label>
-                    <input type="text" id="authUsername" required placeholder="Enter username" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                    <input type="text" id="authUsername" required placeholder="Enter your username" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
-                    <input type="password" id="authPassword" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                    <input type="password" id="authPassword" required placeholder="At least 6 characters" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
                 </div>
-                <button type="submit" id="authSubmitBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition text-sm">
-                    Enter Dashboard
+                <button type="submit" id="authSubmitBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition text-xs">
+                    Sign In to Dashboard
                 </button>
             </form>
-
-            <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-                <span id="authToggleText">Need an account?</span>
-                <button type="button" onclick="toggleAuthMode()" id="authToggleBtn" class="text-indigo-400 hover:underline font-semibold">Register account</button>
-            </div>
         </div>
     </div>
 
-    <!-- MAIN APP DASHBOARD -->
+    <!-- MAIN DASHBOARD (Matches Image 2 Layout) -->
     <div id="appDashboard" class="h-full flex flex-col hidden">
-        <!-- TOP NAV -->
+        <!-- TOP NAV BAR -->
         <header class="h-16 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl px-4 lg:px-6 flex items-center justify-between z-30 shrink-0">
             <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white">
-                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-400 p-0.5 shadow-lg shadow-indigo-500/20">
+                    <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                        <i class="fa-solid font-bold text-indigo-400 text-sm fa-paper-plane"></i>
+                    </div>
                 </div>
                 <div>
                     <h1 class="text-sm font-bold text-slate-100 flex items-center gap-2">
-                        TeleCloud <span class="px-2 py-0.5 text-[9px] uppercase font-mono bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30">Hosted</span>
+                        TeleCloud <span class="px-2 py-0.5 text-[9px] uppercase font-mono bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30">Ultra v3</span>
                     </h1>
+                    <p class="text-[10px] text-slate-400 hidden sm:block">Unlimited Telegram Cloud Storage</p>
                 </div>
             </div>
 
             <div class="flex items-center space-x-3">
-                <span id="userBadge" class="text-xs text-slate-300 font-semibold bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
+                <span class="text-xs text-slate-300 font-semibold bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
                     <i class="fa-solid fa-user text-indigo-400 mr-1.5"></i> <span id="displayUsername">User</span>
                 </span>
-                <button onclick="openSettingsModal()" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition" title="Bot Configuration">
-                    <i class="fa-solid fa-gear text-sm"></i>
+                <button onclick="openSettingsModal()" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition" title="Bot Settings">
+                    <i class="fa-solid fa-gear text-xs"></i>
                 </button>
                 <button onclick="logout()" class="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition" title="Log Out">
-                    <i class="fa-solid fa-right-from-bracket text-sm"></i>
+                    <i class="fa-solid fa-right-from-bracket text-xs"></i>
                 </button>
             </div>
         </header>
 
-        <!-- MAIN LAYOUT -->
+        <!-- WRAPPER -->
         <div class="flex-1 flex overflow-hidden">
             <!-- SIDEBAR -->
             <aside class="w-16 lg:w-60 border-r border-slate-800/80 bg-slate-950 p-3 flex flex-col justify-between shrink-0">
@@ -116,60 +141,67 @@
                     </button>
                     <button onclick="switchTab('upload')" id="nav-upload" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-900">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <span class="hidden lg:inline">Upload Files</span>
+                        <span class="hidden lg:inline">Upload Portal</span>
                     </button>
                 </nav>
-
-                <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-400 hidden lg:block">
-                    <p class="font-bold text-slate-200">Telegram Supergroup</p>
-                    <p id="statusTopicCount">Topics / Folders: Active</p>
-                </div>
             </aside>
 
-            <!-- CONTENT CONTENT -->
-            <main class="flex-1 p-6 overflow-y-auto space-y-6">
+            <!-- MAIN CONTENT AREA -->
+            <main class="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
                 <!-- GALLERY SECTION -->
-                <section id="sec-gallery" class="space-y-4">
-                    <div class="flex justify-between items-center glass-panel p-4 rounded-2xl border border-slate-800">
-                        <h2 class="text-sm font-bold text-slate-200">Your Cloud Storage</h2>
-                        <button onclick="switchTab('upload')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold">
-                            + Upload New File
-                        </button>
-                    </div>
-                    
-                    <div id="mediaGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        <div class="col-span-full text-center py-12 glass-card rounded-2xl border border-slate-800">
-                            <i class="fa-solid fa-cloud text-3xl text-slate-600 mb-2"></i>
-                            <p class="text-xs text-slate-400">No files uploaded yet. Configure your bot settings and upload a file!</p>
+                <section id="sec-gallery" class="space-y-6">
+                    <!-- Toolbar matching Image 2 -->
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-4 rounded-2xl border border-slate-800">
+                        <div class="relative flex-1 max-w-md">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" id="searchInput" oninput="filterMedia()" placeholder="Search media name, AI tags, OCR text..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <select id="typeFilter" onchange="filterMedia()" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300">
+                                <option value="all">All Types</option>
+                                <option value="image">Photos & Graphics</option>
+                                <option value="video">Videos</option>
+                                <option value="document">Documents</option>
+                            </select>
+
+                            <button onclick="switchTab('upload')" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition">
+                                + Upload New
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Media Grid -->
+                    <div id="mediaContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <!-- Populated dynamically -->
                     </div>
                 </section>
 
                 <!-- UPLOAD SECTION -->
                 <section id="sec-upload" class="hidden space-y-6 max-w-2xl mx-auto">
                     <div class="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
-                        <h3 class="text-base font-bold text-white">Upload File & Target Folder</h3>
-                        
+                        <h3 class="text-sm font-bold text-white">Upload to Telegram Topic / Folder</h3>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Select or Create Folder (Telegram Topic)</label>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Target Folder / Topic</label>
                             <div class="flex gap-2">
-                                <select id="uploadFolderSelect" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none">
+                                <select id="uploadFolderSelect" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200">
                                     <option value="General">📁 General Storage</option>
+                                    <option value="Medical Notes">📑 Medical Notes & Studies</option>
+                                    <option value="Vacation">🏖️ Vacation 2026</option>
                                 </select>
-                                <button type="button" onclick="createNewFolderPrompt()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-xl text-xs font-semibold">
-                                    + New Folder
+                                <button type="button" onclick="createNewFolder()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-xl text-xs font-semibold">
+                                    + New Topic
                                 </button>
                             </div>
                         </div>
 
                         <div class="border-2 border-dashed border-indigo-500/30 rounded-2xl p-8 text-center space-y-3">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-400"></i>
-                            <p class="text-xs text-slate-300">Choose a file to upload directly to your Telegram topic</p>
-                            <input type="file" id="uploadFileInput" onchange="uploadFileToTelegram(event)" class="text-xs text-slate-400 border border-slate-800 rounded-xl bg-slate-900 p-2 w-full">
+                            <p class="text-xs text-slate-300">Select file to send to Telegram supergroup topic</p>
+                            <input type="file" id="fileInput" onchange="uploadFile(event)" class="text-xs text-slate-400 border border-slate-800 rounded-xl bg-slate-900 p-2 w-full">
                         </div>
-
-                        <div id="uploadStatus" class="text-xs font-semibold text-center text-amber-400 hidden">
-                            Uploading to Telegram API...
+                        <div id="uploadProgress" class="text-xs font-semibold text-center text-amber-400 hidden">
+                            Dispatching to Telegram Bot API...
                         </div>
                     </div>
                 </section>
@@ -179,49 +211,74 @@
 
     <!-- SETTINGS MODAL -->
     <div id="settingsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="w-full max-w-md glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
+        <div class="w-full max-w-md glass-panel p-6 rounded-3xl border border-slate-800 space-y-4 text-xs">
             <div class="flex justify-between items-center">
-                <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-robot text-indigo-400 mr-2"></i> Telegram Credentials</h3>
-                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <h3 class="font-bold text-white"><i class="fa-solid fa-robot text-indigo-400 mr-2"></i> Telegram Settings</h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-sm"></i></button>
             </div>
-            <div class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-400 uppercase mb-1">Bot Token (from @BotFather)</label>
-                    <input type="text" id="cfgBotToken" placeholder="bot123456789:ABC..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono">
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-400 uppercase mb-1">Supergroup Chat ID</label>
-                    <input type="text" id="cfgChatId" placeholder="-1001234567890" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono">
-                </div>
+            <div>
+                <label class="block font-semibold text-slate-400 uppercase mb-1">Bot Token</label>
+                <input type="text" id="cfgBotToken" placeholder="bot123456789:ABC..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono">
+            </div>
+            <div>
+                <label class="block font-semibold text-slate-400 uppercase mb-1">Supergroup Chat ID</label>
+                <input type="text" id="cfgChatId" placeholder="-1001234567890" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono">
             </div>
             <div class="flex justify-end space-x-2 pt-2">
-                <button onclick="closeSettingsModal()" class="px-3 py-2 bg-slate-800 text-xs text-slate-300 rounded-xl">Cancel</button>
-                <button onclick="saveSettings()" class="px-4 py-2 bg-indigo-600 text-xs text-white font-semibold rounded-xl">Save</button>
+                <button onclick="closeSettingsModal()" class="px-3 py-2 bg-slate-800 text-slate-300 rounded-xl">Cancel</button>
+                <button onclick="saveSettings()" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-xl">Save</button>
             </div>
         </div>
     </div>
 
-    <!-- APP SCRIPT -->
+    <!-- SCRIPT -->
     <script>
-        let isRegister = false;
+        let isRegisterMode = false;
+        let mediaList = [
+            { id: '1', name: '4K_Cinematic_Vacation_Drone.mp4', type: 'video', size: '4.8 GB', date: '2026-10-24', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', tags: ['Drone', '4K', 'Beach'] },
+            { id: '2', name: 'Alpine_Mountain_Sunset.jpg', type: 'image', size: '8.4 MB', date: '2026-10-22', url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80', tags: ['Mountain', 'Sunset'] }
+        ];
 
-        function toggleAuthMode() {
-            isRegister = !isRegister;
-            document.getElementById('authSubtitle').innerText = isRegister ? 'Create a local account to access your cloud' : 'Log in to unlock your personal Telegram Cloud';
-            document.getElementById('authSubmitBtn').innerText = isRegister ? 'Register & Enter' : 'Enter Dashboard';
-            document.getElementById('authToggleText').innerText = isRegister ? 'Already have an account?' : 'Need an account?';
-            document.getElementById('authToggleBtn').innerText = isRegister ? 'Log in here' : 'Register account';
+        function setAuthTab(mode) {
+            isRegisterMode = (mode === 'register');
+            document.getElementById('tabLoginBtn').className = isRegisterMode ? 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition' : 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
+            document.getElementById('tabRegBtn').className = isRegisterMode ? 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition' : 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+            document.getElementById('emailFieldContainer').classList.toggle('hidden', !isRegisterMode);
+            document.getElementById('authSubmitBtn').innerText = isRegisterMode ? 'Create Account & Enter' : 'Sign In to Dashboard';
+            document.getElementById('authSubtitle').innerText = isRegisterMode ? 'Register a secure account' : 'Secure Telegram Cloud Portal';
         }
 
         function handleAuthSubmit(e) {
             e.preventDefault();
             const username = document.getElementById('authUsername').value.trim();
-            if(!username) return;
+            const pass = document.getElementById('authPassword').value;
+
+            if (isRegisterMode) {
+                const email = document.getElementById('authEmail').value.trim();
+                if (!email || pass.length < 6) {
+                    alert("Please enter a valid email and a password of at least 6 characters.");
+                    return;
+                }
+                localStorage.setItem('telecloud_pass_' + username, pass);
+                localStorage.setItem('telecloud_email_' + username, email);
+                alert("Account successfully created!");
+            } else {
+                const savedPass = localStorage.getItem('telecloud_pass_' + username);
+                if (savedPass && savedPass !== pass) {
+                    alert("Incorrect password!");
+                    return;
+                }
+            }
 
             localStorage.setItem('telecloud_user', username);
+            initDashboard(username);
+        }
+
+        function initDashboard(username) {
             document.getElementById('displayUsername').innerText = username;
             document.getElementById('authOverlay').classList.add('hidden');
             document.getElementById('appDashboard').classList.remove('hidden');
+            renderMedia();
             loadSettings();
         }
 
@@ -244,114 +301,23 @@
             if(activeNav) activeNav.classList.add('bg-indigo-600/20', 'border-indigo-500/30', 'text-white');
         }
 
-        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
-        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+        function renderMedia() {
+            const container = document.getElementById('mediaContainer');
+            const searchVal = (document.getElementById('searchInput')?.value || '').toLowerCase();
+            const typeVal = document.getElementById('typeFilter')?.value || 'all';
 
-        function saveSettings() {
-            const token = document.getElementById('cfgBotToken').value.trim();
-            const chatId = document.getElementById('cfgChatId').value.trim();
-            localStorage.setItem('telecloud_token', token);
-            localStorage.setItem('telecloud_chatid', chatId);
-            closeSettingsModal();
-            alert("Telegram settings saved!");
-        }
+            let items = mediaList.filter(i => {
+                const matchSearch = i.name.toLowerCase().includes(searchVal) || i.tags.some(t => t.toLowerCase().includes(searchVal));
+                const matchType = typeVal === 'all' || i.type === typeVal;
+                return matchSearch && matchType;
+            });
 
-        function loadSettings() {
-            document.getElementById('cfgBotToken').value = localStorage.getItem('telecloud_token') || '';
-            document.getElementById('cfgChatId').value = localStorage.getItem('telecloud_chatid') || '';
-        }
-
-        async function createNewFolderPrompt() {
-            const folderName = prompt("Enter new folder name:");
-            if (!folderName) return;
-
-            const token = localStorage.getItem('telecloud_token');
-            const chatId = localStorage.getItem('telecloud_chatid');
-
-            if (token && chatId) {
-                try {
-                    const res = await fetch(`https://api.telegram.org/bot${token}/createForumTopic`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ chat_id: chatId, name: folderName })
-                    });
-                    const data = await res.json();
-                    if(data.ok) {
-                        alert(`Telegram topic "${folderName}" created automatically!`);
-                    }
-                } catch(e) {
-                    console.error("Topic creation failed:", e);
-                }
-            }
-
-            const select = document.getElementById('uploadFolderSelect');
-            const opt = document.createElement('option');
-            opt.value = folderName;
-            opt.innerText = `📁 ${folderName}`;
-            select.appendChild(opt);
-            select.value = folderName;
-        }
-
-        async function uploadFileToTelegram(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const token = localStorage.getItem('telecloud_token');
-            const chatId = localStorage.getItem('telecloud_chatid');
-
-            if (!token || !chatId) {
-                alert("Please configure your Telegram Bot Token & Chat ID in Settings first!");
-                openSettingsModal();
+            if (items.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-12 glass-card rounded-2xl text-xs text-slate-400">No media found.</div>`;
                 return;
             }
 
-            const status = document.getElementById('uploadStatus');
-            status.classList.remove('hidden');
-
-            const formData = new FormData();
-            formData.append('chat_id', chatId);
-            formData.append('document', file);
-
-            try {
-                const res = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-
-                if (data.ok) {
-                    alert(`"${file.name}" successfully uploaded to Telegram Cloud!`);
-                    addFileToGallery(file.name);
-                } else {
-                    alert("Upload error: " + data.description);
-                }
-            } catch(err) {
-                alert("Upload failed. Please check network connection.");
-            } finally {
-                status.classList.add('hidden');
-            }
-        }
-
-        function addFileToGallery(name) {
-            const grid = document.getElementById('mediaGrid');
-            if(grid.innerText.includes("No files uploaded")) grid.innerHTML = '';
-
-            grid.innerHTML += `
-                <div class="glass-card p-4 rounded-2xl border border-slate-800 space-y-2">
-                    <i class="fa-solid fa-file-arrow-down text-indigo-400 text-2xl"></i>
-                    <p class="text-xs font-bold text-slate-200 truncate">${name}</p>
-                    <span class="text-[10px] text-emerald-400 font-mono">Stored in Telegram</span>
-                </div>
-            `;
-        }
-
-        // Auto check login
-        if (localStorage.getItem('telecloud_user')) {
-            document.getElementById('displayUsername').innerText = localStorage.getItem('telecloud_user');
-            document.getElementById('authOverlay').classList.add('hidden');
-            document.getElementById('appDashboard').classList.remove('hidden');
-            loadSettings();
-        }
-    </script>
-</body>
-</html>
+            container.innerHTML = items.map(item => `
+                <div class="glass-card rounded-2xl border border-slate-800 overflow-hidden space-y-2 p-3">
+                    <div class="h-36 bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center">
+                        ${item.type === 'image' ? `<img src="${item.url}" class="w-full h-full ob
