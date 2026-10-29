@@ -38,6 +38,14 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
+        .masonry-grid {
+            column-count: 1;
+            column-gap: 1.25rem;
+        }
+        @media (min-width: 640px) { .masonry-grid { column-count: 2; } }
+        @media (min-width: 1024px) { .masonry-grid { column-count: 3; } }
+        @media (min-width: 1280px) { .masonry-grid { column-count: 4; } }
+        .masonry-item { break-inside: avoid; margin-bottom: 1.25rem; }
     </style>
 </head>
 <body class="h-full bg-slate-950 font-sans antialiased text-slate-100 flex flex-col overflow-hidden">
@@ -55,9 +63,8 @@
                 <p class="text-xs text-slate-400" id="authSubtitle">Secure Telegram Cloud Portal</p>
             </div>
 
-            <!-- Tab Switcher (Fixed Mobile Touch Handlers) -->
             <div class="flex bg-slate-900 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold gap-1">
-                <button type="button" id="tabLoginBtn" onclick="switchAuthTab('login')" class="flex-1 py-3 rounded-lg bg-indigo-600 text-white transition text-center cursor-pointer">Sign In</button>
+                <button type="button" id="tabLoginBtn" onclick="switchAuthTab('login')" class="flex-1 py-3 rounded-lg bg-indigo-600 text-white transition text-center cursor-pointer shadow">Sign In</button>
                 <button type="button" id="tabRegBtn" onclick="switchAuthTab('register')" class="flex-1 py-3 rounded-lg text-slate-300 hover:text-white transition text-center cursor-pointer">Create Account</button>
             </div>
 
@@ -149,11 +156,10 @@
                     <div class="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
                         <h3 class="text-sm font-bold text-white">Upload to Telegram Topic / Folder</h3>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Target Folder / Topic</label>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Target Folder / Topic (Synced from Telegram)</label>
                             <div class="flex gap-2">
                                 <select id="uploadFolderSelect" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200">
-                                    <option value="General">📁 General Storage</option>
-                                    <option value="Medical Notes">📑 Medical Notes & Studies</option>
+                                    <option value="" data-thread="">📁 General Storage (Default)</option>
                                 </select>
                                 <button type="button" onclick="createNewFolder()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-xl text-xs font-semibold">
                                     + New Topic
@@ -163,11 +169,11 @@
 
                         <div class="border-2 border-dashed border-indigo-500/30 rounded-2xl p-8 text-center space-y-3">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-400"></i>
-                            <p class="text-xs text-slate-300">Select file to send to Telegram supergroup topic</p>
-                            <input type="file" id="fileInput" onchange="uploadFile(event)" class="text-xs text-slate-400 border border-slate-800 rounded-xl bg-slate-900 p-2 w-full">
+                            <p class="text-xs text-slate-300">Select file to send directly to your selected Telegram topic</p>
+                            <input type="file" id="fileInput" onchange="uploadFileToTelegramTopic(event)" class="text-xs text-slate-400 border border-slate-800 rounded-xl bg-slate-900 p-2 w-full">
                         </div>
                         <div id="uploadProgress" class="text-xs font-semibold text-center text-amber-400 hidden">
-                            Dispatching to Telegram Bot API...
+                            Dispatching to Telegram Bot API topic thread...
                         </div>
                     </div>
                 </section>
@@ -192,7 +198,7 @@
             </div>
             <div class="flex justify-end space-x-2 pt-2">
                 <button onclick="closeSettingsModal()" class="px-3 py-2 bg-slate-800 text-slate-300 rounded-xl">Cancel</button>
-                <button onclick="saveSettings()" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-xl">Save</button>
+                <button onclick="saveSettings()" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-xl">Save & Sync Topics</button>
             </div>
         </div>
     </div>
@@ -201,8 +207,7 @@
     <script>
         let isRegisterMode = false;
         let mediaList = [
-            { id: '1', name: '4K_Cinematic_Vacation_Drone.mp4', type: 'video', size: '4.8 GB', date: '2026-10-24', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', tags: ['Drone', '4K'] },
-            { id: '2', name: 'Alpine_Mountain_Sunset.jpg', type: 'image', size: '8.4 MB', date: '2026-10-22', url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80', tags: ['Mountain'] }
+            { id: '1', name: '4K_Cinematic_Vacation_Drone.mp4', type: 'video', size: '4.8 GB', date: '2026-10-24', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', tags: ['Drone', '4K'] }
         ];
 
         function switchAuthTab(mode) {
@@ -255,6 +260,7 @@
             document.getElementById('appDashboard').classList.remove('hidden');
             renderMedia();
             loadSettings();
+            syncTelegramTopics();
         }
 
         function logout() {
@@ -302,6 +308,44 @@
 
         function filterMedia() { renderMedia(); }
 
+        // AUTO-DISCOVER EXISTING TELEGRAM TOPICS
+        async function syncTelegramTopics() {
+            const token = localStorage.getItem('telecloud_token');
+            const chatId = localStorage.getItem('telecloud_chatid');
+            if (!token || !chatId) return;
+
+            try {
+                // Fetch recent updates from bot to discover message threads/topics
+                const res = await fetch(`https://api.telegram.org/bot${token}/getUpdates`);
+                const data = await res.json();
+                
+                const select = document.getElementById('uploadFolderSelect');
+                // Keep default
+                let existingTopics = new Set();
+                Array.from(select.options).forEach(opt => existingTopics.add(opt.text));
+
+                if (data.ok && data.result) {
+                    data.result.forEach(update => {
+                        const msg = update.message || update.channel_post;
+                        if (msg && msg.chat && String(msg.chat.id) === String(chatId) && msg.message_thread_id) {
+                            const topicName = msg.reply_to_message?.forum_topic_created?.name || `Topic #${msg.message_thread_id}`;
+                            const optionText = `📁 ${topicName}`;
+                            if (!existingTopics.has(optionText)) {
+                                existingTopics.add(optionText);
+                                const opt = document.createElement('option');
+                                opt.value = topicName;
+                                opt.setAttribute('data-thread', msg.message_thread_id);
+                                opt.innerText = optionText;
+                                select.appendChild(opt);
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error("Could not sync telegram topics:", err);
+            }
+        }
+
         async function createNewFolder() {
             const name = prompt("Enter new folder/topic name:");
             if (!name) return;
@@ -309,26 +353,33 @@
             const token = localStorage.getItem('telecloud_token');
             const chatId = localStorage.getItem('telecloud_chatid');
 
+            let threadId = '';
             if (token && chatId) {
                 try {
-                    await fetch(`https://api.telegram.org/bot${token}/createForumTopic`, {
+                    const res = await fetch(`https://api.telegram.org/bot${token}/createForumTopic`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ chat_id: chatId, name: name })
                     });
-                    alert(`Telegram supergroup topic "${name}" created successfully!`);
+                    const data = await res.json();
+                    if (data.ok && data.result) {
+                        threadId = data.result.message_thread_id;
+                        alert(`Telegram supergroup topic "${name}" created successfully!`);
+                    }
                 } catch(e) { console.error(e); }
             }
 
             const select = document.getElementById('uploadFolderSelect');
             const opt = document.createElement('option');
             opt.value = name;
+            opt.setAttribute('data-thread', threadId);
             opt.innerText = `📁 ${name}`;
             select.appendChild(opt);
             select.value = name;
         }
 
-        async function uploadFile(e) {
+        // UPLOAD FILE TO THE CORRECT TOPIC THREAD ID
+        async function uploadFileToTelegramTopic(e) {
             const file = e.target.files[0];
             if (!file) return;
 
@@ -340,16 +391,26 @@
                 return;
             }
 
+            // Get selected folder and its message_thread_id
+            const select = document.getElementById('uploadFolderSelect');
+            const selectedOpt = select.options[select.selectedIndex];
+            const threadId = selectedOpt.getAttribute('data-thread');
+
             document.getElementById('uploadProgress').classList.remove('hidden');
             const formData = new FormData();
             formData.append('chat_id', chatId);
             formData.append('document', file);
+            
+            // CRITICAL FIX: Pass message_thread_id so it uploads into the specific topic instead of General
+            if (threadId && threadId !== '') {
+                formData.append('message_thread_id', threadId);
+            }
 
             try {
                 const res = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.ok) {
-                    alert("File successfully sent to Telegram storage!");
+                    alert(`File successfully sent to Telegram topic "${selectedOpt.text}"!`);
                     mediaList.unshift({
                         id: Date.now().toString(),
                         name: file.name,
@@ -357,7 +418,7 @@
                         size: (file.size / (1024*1024)).toFixed(1) + ' MB',
                         date: new Date().toISOString().split('T')[0],
                         url: URL.createObjectURL(file),
-                        tags: ['Uploaded']
+                        tags: [selectedOpt.value]
                     });
                     renderMedia();
                     switchTab('gallery');
@@ -377,7 +438,8 @@
             localStorage.setItem('telecloud_token', document.getElementById('cfgBotToken').value.trim());
             localStorage.setItem('telecloud_chatid', document.getElementById('cfgChatId').value.trim());
             closeSettingsModal();
-            alert("Settings saved!");
+            alert("Settings saved! Syncing Telegram topics...");
+            syncTelegramTopics();
         }
         function loadSettings() {
             document.getElementById('cfgBotToken').value = localStorage.getItem('telecloud_token') || '';
